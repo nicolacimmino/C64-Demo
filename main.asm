@@ -9,20 +9,13 @@
 
 start   SEI
 
-        ;lda #$7f                      ; turn off the cia interrupts
-        ;sta $dc0d
-        JSR $FF81
-
-        ; Enable raster interrupt
-        LDA #$01
+        JSR $FF81       ; Reset Vic, clear screen
+        LDA #$01        ; Enable raster interrupt
         STA $D01A
 
-        ; Setup raster line, high bit in D011
-        LDA #80  
-        STA $D012
-        LDA #$1B   
-        STA $D011
-          
+        LDA #30
+        JSR setrstint
+        
         ; Setup the interrupt vector
         LDA #<irq  
         STA $0314  
@@ -30,26 +23,46 @@ start   SEI
         STA $0315
 
         CLI
+        RTS     
         JMP *
 
 irq     lda $d019                     ; clear source of interrupts
+        and #01
+        cmp #01
+        bne endint
         sta $d019
 
         LDA $D012
-        CMP #80
+        CMP #60
         BEQ barst
-        LDA #80
-        STA $D012
-        LDA #3
+        LDA #30
+        JSR setrstint
+        LDA #4
         STA $D020
         STA $D021
         JMP endint
 
-barst   LDA #110
-        STA $D012
-        LDA #1
+barst   LDA #50
+        JSR setrstint
+        LDA #2
         STA $D020
         STA $D021
 
 endint  jmp $ea31
-     
+
+; **********************************************************************
+; * Setup next raster interrupt line.
+; * A: line LSB/2
+; **********************************************************************
+setrstint       ASL
+                STA $D012       ; LSB of line to raster counter register
+                BCC clearrst8   ; Was bit 7 set? No, clear RST8 bit
+                LDA #%10000000  ; Yes, set RST8 bit
+                ORA $D011
+                STA $D011
+                RTS
+
+clearrst8       LDA #%01111111  ; Yes, clear RST8 bit
+                AND $D011
+                STA $D011   
+                RTS
