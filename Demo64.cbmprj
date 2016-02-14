@@ -21,13 +21,13 @@
         <PostBuildCommands />
     </BuildEvents>
     <BuildList>
-        <FileName>main.asm</FileName>
+        <FileName>01 - Rasterbar.asm</FileName>
     </BuildList>
     <DetermineBuildOrder>0</DetermineBuildOrder>
     <PaddingByte>0</PaddingByte>
     <SourceFiles>
         <SourceFile>
-            <Name>main.asm</Name>
+            <Name>01 - Rasterbar.asm</Name>
             <PrgName />
             <FileType>2</FileType>
             <IncludeInBuild>True</IncludeInBuild>
