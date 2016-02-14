@@ -2,5 +2,6 @@
 *.dbg
 *.prg
 *.tmp
+Thumbs.db
 /bak/*
 
