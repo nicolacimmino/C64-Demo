@@ -22,10 +22,22 @@
     </BuildEvents>
     <BuildList>
         <FileName>01 - Rasterbar.asm</FileName>
+        <FileName>01 - Flickeing.bas</FileName>
     </BuildList>
     <DetermineBuildOrder>0</DetermineBuildOrder>
     <PaddingByte>0</PaddingByte>
     <SourceFiles>
+        <SourceFile>
+            <Name>01 - Flickeing.bas</Name>
+            <PrgName />
+            <FileType>1</FileType>
+            <IncludeInBuild>True</IncludeInBuild>
+            <Regions />
+            <Breakpoints />
+            <Bookmarks />
+            <Topmost>True</Topmost>
+            <FileOpen>True</FileOpen>
+        </SourceFile>
         <SourceFile>
             <Name>01 - Rasterbar.asm</Name>
             <PrgName />
@@ -34,7 +46,7 @@
             <Regions />
             <Breakpoints />
             <Bookmarks />
-            <Topmost>True</Topmost>
+            <Topmost>False</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
     </SourceFiles>
