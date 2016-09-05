@@ -19,7 +19,6 @@
 ; *                                                                           *
 ; *****************************************************************************
 
-
 ; * Below is tbe BASIC tokens for 10 SYS (49152)
 ; * We store them at the beginning of the BASIC RAM so when we can load
 ; * the program with autorun (LOAD "*",8,1) and save to type the SYS.
@@ -27,6 +26,12 @@
 
         BYTE    $0E, $08, $0A, $00, $9E, $20, $28,  $34, $39, $31, $35, $32
         BYTE    $29, $00, $00, $00
+
+; *
+; * Constants
+; *
+BARPOS = 80             ; Raster line where the green bar starts
+BACKCOL = 0             ; Background color
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -37,7 +42,7 @@ start   SEI             ; Prevent interrupts while we set things up
         STA $DC0D
         LDA #$01        ; Enable raster interrupt
         STA $D01A
-        LDA #80         ; Set raster interrupt to line 80
+        LDA #BARPOS     ; Set raster interrupt to the start of the bar
         STA $D012
         LDA #%01111111  ; Clear RST8 bit, for now we don't work over
         AND $D011       ; raster line 255 
@@ -59,18 +64,35 @@ irq     PHA             ; Preserve A,X,Y on the stack
         PHA
         TYA
         PHA
-
-        LDA #2          ; Set border and background color to the
-        STA $D020       ; desired bar color
-        STA $D021
         
-waitbar LDA $D012       ; Wait until the raster scan reaches line 185
-        CMP #185
+        LDA #$EE
+delayA  ADC #1
+        BNE delayA
+        NOP
+        NOP
+        NOP
+
+        LDX #0
+waitbar LDA barcol,X
+        STA $D020      
+        STA $D021
+        INX
+        TXA
+        AND #%00000111
+        TAX
+  
+        LDA #$E8
+delayB  ADC #1
+        BNE delayB
+        NOP
+
+        LDA $D012       ; Wait until the raster scan reaches the end of the bar
+        CMP #BARPOS+25
         BMI waitbar
 
-        LDA #14         ; Reset the colors to C64 defaults
+
+        LDA #BACKCOL
         STA $D020
-        LDA #6
         STA $D021
 
         ASL $D019       ; Clear the interrupt flag
@@ -84,4 +106,6 @@ waitbar LDA $D012       ; Wait until the raster scan reaches line 185
         PLA
 
         RTI
+
+barcol  BYTE 9,5,13,1,1,13,5,9
 

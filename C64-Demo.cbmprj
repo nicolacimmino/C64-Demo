@@ -9,9 +9,9 @@
     <FilesGlobal>False</FilesGlobal>
     <BatchMode>False</BatchMode>
     <AppendToDisk>False</AppendToDisk>
-    <GenToDisk>False</GenToDisk>
-    <BuildToPrgFile>True</BuildToPrgFile>
-    <d64Name />
+    <GenToDisk>True</GenToDisk>
+    <BuildToPrgFile>False</BuildToPrgFile>
+    <d64Name>DISK</d64Name>
     <Comments />
     <BuildEvents>
         <PreBuildEnabled>False</PreBuildEnabled>
@@ -34,7 +34,7 @@
             <Regions />
             <Breakpoints />
             <Bookmarks />
-            <Topmost>False</Topmost>
+            <Topmost>True</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
     </SourceFiles>
