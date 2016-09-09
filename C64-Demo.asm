@@ -29,7 +29,7 @@
 ; *
 ; * Constants
 ; *
-RASSTART = 80           ; Raster line where the raster interrupt starts
+RASSTART = 81           ; Raster line where the raster interrupt starts
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -129,12 +129,35 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
         
         ; From here on we are stable.
 
-        LDA #1          ; Just flick the color for few cycles
-        STA $D020       ; to show the interrupt is stable
-        STA $D021
+        NOP
+        NOP
+        NOP
+        NOP
+
+        LDY #15
+
+barloop LDA barcolors,Y  ; 4        
+        STA $D020        ; 4
+        STA $D021        ; 4 -> 12, 51 to go
+
+
+        LDX #86        ; 2
+        DEX             ; 2
+        BNE *-1         ; 2/3  -> 2 + (n*5) - 1
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        BIT $00         ; Just a 3 cycles instruction
+
+        DEY             ; 2
+        BNE barloop     ; 3
+
+        NOP
+
         LDA #0          ; Back to separate border/background colors
         STA $D020       ; So we see where things are relative to our stroke
-        LDA #2          
         STA $D021
 
         ; We are done with the interrupt, we need to set up
@@ -158,3 +181,5 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
 
         RTI
 
+*=$C201
+barcolors BYTE 1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8
