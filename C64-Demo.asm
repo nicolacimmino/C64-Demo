@@ -60,6 +60,7 @@ start   SEI             ; Prevent interrupts while we set things up
         ; useful, just a mix of different length instructions
         ; so we maximise the raster interrupt jitter to simulate
         ; real code.
+
 loop    LDA #1          ; 2 cycles
         LDA $01         ; 3 cycles
         LDA $0300       ; 4 cycles
@@ -73,6 +74,7 @@ loop    LDA #1          ; 2 cycles
         ; start of the desired line to +7 cycles depending on
         ; the instruction that was execuing when the interrupt
         ; occurred.
+
 irq     PHA             ; Preserve A,X,Y on the stack
         TXA
         PHA
@@ -90,7 +92,7 @@ irq     PHA             ; Preserve A,X,Y on the stack
                         ; return address on the stack. Save the good stack
                         ; pointer into X, we will restore it later before RTI
         
-        ASL $D019       ; Clear the interrupt flag        
+        ASL $D019       ; Acknoweledge and clear the interrupt flag        
         CLI
 
         NOP             ; Waste time waiting the interrupt to happen
@@ -102,7 +104,7 @@ irq     PHA             ; Preserve A,X,Y on the stack
         NOP
         NOP
         NOP             ; These are enough to complete a scan line.
-
+        
         ; This is the second raster interrupt routine. By the time
         ; we come here we have a jitter of just one cycle as we ensured
         ; this interrupt happens while executing NOPs (2 cycles).
@@ -113,11 +115,10 @@ irq     PHA             ; Preserve A,X,Y on the stack
 
 irq2    TXS             ; Restore stack pointer as the interrupt messed it.
 
-        LDX #$08        ; This loop, the above TXS and the below BIT and LDA
-        DEX             ; take exactly one scan line minus 1 cycle.
-        BNE *-1    
-        BIT $00         ; Just a 3 cycles instruction
-        
+        LDX #$08        ; This loop, the interrput call the above TXS and 
+        DEX             ; the below BIT and LDA take exactly one scan line 
+        BNE *-1         ; minus 1 cycle.
+        BIT $00         ;         
         LDA $d012       ; Get current scan line
         CMP $d012       ; Here we are either still on the same line
                         ; (with one cycle to go) or at the next line.
@@ -137,7 +138,7 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
         ; The loop below must last exactly 8 raster lines, 7 full ones and
         ; and a bad line (63*7+20=461). You can change the single bars size
         ; as long as the same amount of bad lines is in each bar else you
-        ; will start to drift.
+        ; will start to drift, so they must be multiples of 8.
 
 barloop LDA barcol,Y     ; Get the current bar color                    4 cycles      
         STA $D020        ; and set it for border                        4 cycles
