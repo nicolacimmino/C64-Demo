@@ -18,7 +18,7 @@
 ; *                                                                           *
 ; *****************************************************************************
 
-; * Below is tbe BASIC tokens for 10 SYS (49152)
+; * Below are tbe BASIC tokens for 10 SYS (49152)
 ; * We store them at the beginning of the BASIC RAM so when we can load
 ; * the program with autorun (LOAD "*",8,1) and save to type the SYS.
 *=$801
@@ -62,10 +62,10 @@ start   SEI             ; Prevent interrupts while we set things up
         ; real code.
 loop    LDA #1          ; 2 cycles
         LDA $01         ; 3 cycles
-        LDA $0400       ; 4 cycles
+        LDA $0300       ; 4 cycles
         LDA ($04),Y     ; 5 cycles      
         LDA ($04,X)     ; 6 cycles 
-        LSR $0400,X     ; 7 cycles
+        LSR $0300,X     ; 7 cycles
         JMP loop
 
         ; This is the first raster interrupt service routine.
@@ -107,7 +107,7 @@ irq     PHA             ; Preserve A,X,Y on the stack
         ; we come here we have a jitter of just one cycle as we ensured
         ; this interrupt happens while executing NOPs (2 cycles).
         ; Next we ensure we spend the exact amount of cycles it takes 
-        ; to draw a full scan line. The last instruction we use does the 
+        ; to draw a full scan line. The last BEQ *+2 we use does the 
         ; sync magic. See comments below. This is timed for PAL systems
         ; the delay loop needs to be changed for NTSC.
 
@@ -129,36 +129,33 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
         
         ; From here on we are stable.
 
-        NOP
-        NOP
-        NOP
-        NOP
+        AND ($00,X)     ; Waste 8 cycles so we are at the start of
+        NOP             ; the horizontal blanking 
+        
+        LDY #15         ; Number of bars
 
-        LDY #15
+        ; The loop below must last exactly 8 raster lines, 7 full ones and
+        ; and a bad line (63*7+20=461). You can change the single bars size
+        ; as long as the same amount of bad lines is in each bar else you
+        ; will start to drift.
 
-barloop LDA barcolors,Y  ; 4        
-        STA $D020        ; 4
-        STA $D021        ; 4 -> 12, 51 to go
+barloop LDA barcol,Y     ; Get the current bar color                    4 cycles      
+        STA $D020        ; and set it for border                        4 cycles
+        STA $D021        ; and background color                         4 cycles
 
-
-        LDX #86        ; 2
-        DEX             ; 2
-        BNE *-1         ; 2/3  -> 2 + (n*5) - 1
-        NOP
-        NOP
-        NOP
-        NOP
-        NOP
-        BIT $00         ; Just a 3 cycles instruction
-
-        DEY             ; 2
-        BNE barloop     ; 3
-
-        NOP
-
-        LDA #0          ; Back to separate border/background colors
-        STA $D020       ; So we see where things are relative to our stroke
-        STA $D021
+        LDX #88          ; This block completes the        2+(88*5)-1 441 cycles         
+        DEX              ; amount of cycles needed to fill exactly
+        BNE *-1          ; 8 lines of which one is a bad line
+        BIT $00          ;                                              3 cycles
+        DEY              ;                                              2 cycles
+        BNE barloop      ;                                              3 cycles
+                         ;                                      Total 461 cycles
+       
+        NOP              ; The not taken branch is one cycle shorter
+                         ; we are still in the right border wait 2 cycles.
+        LDA #0           ; Back to black. 
+        STA $D020        ;  
+        STA $D021        ; 
 
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
@@ -173,7 +170,7 @@ barloop LDA barcolors,Y  ; 4
         ASL $D019       ; Clear the interrupt flag        
         LDA $DC0D
       
-        PLA             ; Restore A,X,Y from the stack
+        PLA             ; Restore Y,X,A from the stack
         TAY
         PLA
         TAX
@@ -181,5 +178,9 @@ barloop LDA barcolors,Y  ; 4
 
         RTI
 
-*=$C201
-barcolors BYTE 1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8
+; These are the bars color codes. Rightmost value is the first
+; bar. We need to ensure this stuff is all within a page as we load
+; it with an LDA absolute,X which takes one more cycle if the indexed
+; value is on a different page of the absolute value.
+*=$E000
+barcol  BYTE 1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8
