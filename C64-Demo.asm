@@ -29,7 +29,7 @@
 ; *
 ; * Constants
 ; *
-RASSTART = 81           ; Raster line where the raster interrupt starts
+RASSTART = 88           ; Raster line where the raster interrupt starts
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -130,30 +130,50 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
         
         ; From here on we are stable.
 
-        AND ($00,X)     ; Waste 8 cycles so we are at the start of
-        NOP             ; the horizontal blanking 
-        
-        LDY #15         ; Number of bars
+;        AND ($00,X)     ; Waste 8 cycles so we are at the start of
+;        NOP             ; the horizontal blanking 
+;        
+        ;LDY #7          ; Number of bars
 
         ; The loop below must last exactly 8 raster lines, 7 full ones and
         ; and a bad line (63*7+20=461). You can change the single bars size
         ; as long as the same amount of bad lines is in each bar else you
         ; will start to drift, so they must be multiples of 8.
 
-barloop LDA barcol,Y     ; Get the current bar color                    4 cycles      
+onemore LDA #%11111000
+        AND $D011
+        STA $D011
+
+        LDX #7           ; 35 cycles         
+        DEX              ; 
+        BNE *-1          ; 
+
+      
+barlo1  LDA #%00000111
+        AND $D011
+        CMP #7
+        BEQ exit
+        TAY
+sm1     LDA barcol,Y     ; Get the current bar color                    4 cycles      
         STA $D020        ; and set it for border                        4 cycles
         STA $D021        ; and background color                         4 cycles
 
-        LDX #88          ; This block completes the        2+(88*5)-1 441 cycles         
+        LDX #5           ; This block completes the        2+(88*5)-1 441 cycles         
         DEX              ; amount of cycles needed to fill exactly
         BNE *-1          ; 8 lines of which one is a bad line
-        BIT $00          ;                                              3 cycles
-        DEY              ;                                              2 cycles
-        BNE barloop      ;                                              3 cycles
-                         ;                                      Total 461 cycles
-       
-        NOP              ; The not taken branch is one cycle shorter
-                         ; we are still in the right border wait 2 cycles.
+        NOP
+        NOP
+
+        INC $D011
+        JMP barlo1
+
+exit    
+;        INC sm1+1
+;        LDA sm1+1
+;        CMP barcol2
+;        BNE onemore
+; 
+        BIT $00
         LDA #0           ; Back to black. 
         STA $D020        ;  
         STA $D021        ; 
@@ -184,4 +204,8 @@ barloop LDA barcol,Y     ; Get the current bar color                    4 cycles
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-barcol  BYTE 1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8
+barcol   BYTE 1,2,1,2,1,2,1,2
+barcol1  BYTE 1,2,5,2,5,2,5,2
+barcol2  BYTE 1,2,5,2,5,2,5,2
+
+;,1,2,1,2,1,2,1,2,1,2
