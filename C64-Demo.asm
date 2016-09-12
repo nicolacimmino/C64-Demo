@@ -29,7 +29,7 @@
 ; *
 ; * Constants
 ; *
-RASSTART = 88           ; Raster line where the raster interrupt starts
+RASSTART = 99           ; Raster line where the raster interrupt starts
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -103,8 +103,17 @@ irq     PHA             ; Preserve A,X,Y on the stack
         NOP
         NOP
         NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
         NOP             ; These are enough to complete a scan line.
-        
+
         ; This is the second raster interrupt routine. By the time
         ; we come here we have a jitter of just one cycle as we ensured
         ; this interrupt happens while executing NOPs (2 cycles).
@@ -113,16 +122,18 @@ irq     PHA             ; Preserve A,X,Y on the stack
         ; sync magic. See comments below. This is timed for PAL systems
         ; the delay loop needs to be changed for NTSC.
 
-irq2    TXS             ; Restore stack pointer as the interrupt messed it.
+                        ; Interrupt servicing (during a NOP)          2/3 cycles                                               
+irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles   
 
-        LDX #$08        ; This loop, the interrput call the above TXS and 
+        LDX #9         ; This loop, the interrput call the above TXS and 
         DEX             ; the below BIT and LDA take exactly one scan line 
         BNE *-1         ; minus 1 cycle.
-        BIT $00         ;         
-        LDA $d012       ; Get current scan line
-        CMP $d012       ; Here we are either still on the same line
+                        ;                                              46 cycles
+        BIT $00         ;                                               3 cycles
+        LDA $d012       ; Get current scan line                         4 cycles
+        CMP $d012       ; Here we are either still on the same line     4 cycles
                         ; (with one cycle to go) or at the next line.
-        BEQ *+2         ; If we are on the same line branch (3 cycles)
+        BEQ *+2         ; If we are on same line branch (3 cycles)    3/2 cycles
                         ; else move on (2 cycles). Note that in both
                         ; cases we end up at the next instruction, but it
                         ; will take different time to get there so we 
@@ -130,52 +141,37 @@ irq2    TXS             ; Restore stack pointer as the interrupt messed it.
         
         ; From here on we are stable.
 
-;        AND ($00,X)     ; Waste 8 cycles so we are at the start of
-;        NOP             ; the horizontal blanking 
-;        
-        ;LDY #7          ; Number of bars
+        LDA #2           ; Back to black. 
+        STA $D021        ;
+        STA $D020        ; 
+ jmp exit
+        LDY #$FF
 
-        ; The loop below must last exactly 8 raster lines, 7 full ones and
-        ; and a bad line (63*7+20=461). You can change the single bars size
-        ; as long as the same amount of bad lines is in each bar else you
-        ; will start to drift, so they must be multiples of 8.
+barlo1  INY
 
-onemore LDA #%11111000
+        LDA #%11111000
         AND $D011
-        STA $D011
-
-        LDX #7           ; 35 cycles         
-        DEX              ; 
-        BNE *-1          ; 
-
-      
-barlo1  LDA #%00000111
-        AND $D011
-        CMP #7
-        BEQ exit
-        TAY
-sm1     LDA barcol,Y     ; Get the current bar color                    4 cycles      
+        ;STA $D011
+        TYA
+        AND #%00000111
+        ORA $D011
+        ;STA $D011
+                
+        LDA barcol,Y     ; Get the current bar color                    4 cycles      
         STA $D020        ; and set it for border                        4 cycles
         STA $D021        ; and background color                         4 cycles
 
         LDX #5           ; This block completes the        2+(88*5)-1 441 cycles         
         DEX              ; amount of cycles needed to fill exactly
         BNE *-1          ; 8 lines of which one is a bad line
-        NOP
-        NOP
-
-        INC $D011
-        JMP barlo1
-
-exit    
-;        INC sm1+1
-;        LDA sm1+1
-;        CMP barcol2
-;        BNE onemore
-; 
+       
+        TYA
+        CMP #1
+        BNE barlo1
+exit
         BIT $00
         LDA #0           ; Back to black. 
-        STA $D020        ;  
+        STA $D020        ;
         STA $D021        ; 
 
         ; We are done with the interrupt, we need to set up
@@ -189,8 +185,7 @@ exit
         STA $FFFF
 
         ASL $D019       ; Clear the interrupt flag        
-        LDA $DC0D
-      
+        
         PLA             ; Restore Y,X,A from the stack
         TAY
         PLA
