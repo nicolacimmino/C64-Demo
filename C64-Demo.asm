@@ -29,7 +29,7 @@
 ; *
 ; * Constants
 ; *
-RASSTART = 99           ; Raster line where the raster interrupt starts
+RASSTART = 49           ; Raster line where the raster interrupt starts
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -124,12 +124,13 @@ irq     PHA             ; Preserve A,X,Y on the stack
 
                         ; Interrupt servicing (during a NOP)          2/3 cycles                                               
 irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles   
-
-        LDX #9         ; This loop, the interrput call the above TXS and 
-        DEX             ; the below BIT and LDA take exactly one scan line 
+        
+        LDY #8          ; This loop, the interrput call the above TXS and 
+        DEY             ; the below BIT and LDA take exactly one scan line 
         BNE *-1         ; minus 1 cycle.
-                        ;                                              46 cycles
-        BIT $00         ;                                               3 cycles
+                        ;                                              46 cycles 
+        BIT $00
+
         LDA $d012       ; Get current scan line                         4 cycles
         CMP $d012       ; Here we are either still on the same line     4 cycles
                         ; (with one cycle to go) or at the next line.
@@ -138,37 +139,40 @@ irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
                         ; cases we end up at the next instruction, but it
                         ; will take different time to get there so we 
                         ; offset the remaining 1 cycle jitter.
-        
+
         ; From here on we are stable.
 
-        LDA #2           ; Back to black. 
-        STA $D021        ;
-        STA $D020        ; 
- jmp exit
+        LDY #10         ; Push forward so the STA $D020/1 
+        DEY             ; are in the horizontal sync area 
+        BNE *-1         ; 
+       
         LDY #$FF
 
 barlo1  INY
 
-        LDA #%11111000
-        AND $D011
-        ;STA $D011
-        TYA
-        AND #%00000111
-        ORA $D011
-        ;STA $D011
-                
         LDA barcol,Y     ; Get the current bar color                    4 cycles      
         STA $D020        ; and set it for border                        4 cycles
         STA $D021        ; and background color                         4 cycles
 
-        LDX #5           ; This block completes the        2+(88*5)-1 441 cycles         
+        LDA #%11111000
+        AND $D011
+        STA $D011
+        TYA
+        AND #%00000111
+        ORA $D011
+        STA $D011
+
+                
+        LDX #3           ; This block completes the        2+(88*5)-1 441 cycles         
         DEX              ; amount of cycles needed to fill exactly
         BNE *-1          ; 8 lines of which one is a bad line
-       
+        NOP
+        NOP
+
         TYA
         CMP #1
         BNE barlo1
-exit
+
         BIT $00
         LDA #0           ; Back to black. 
         STA $D020        ;
@@ -199,7 +203,7 @@ exit
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-barcol   BYTE 1,2,1,2,1,2,1,2
+barcol   BYTE 3,2,1,2,1,2,1,2
 barcol1  BYTE 1,2,5,2,5,2,5,2
 barcol2  BYTE 1,2,5,2,5,2,5,2
 
