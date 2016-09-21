@@ -145,32 +145,32 @@ irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         LDY #10         ; Push forward so the STA $D020/1 
         DEY             ; are in the horizontal sync area 
         BNE *-1         ; 
-       
-        LDY #$FF
 
-barlo1  INY
+        LDY #$FF        ; Y will be used to index table barcol, we start from FF
+                        ; so when we INY below we roll to 00
 
-        LDA barcol,Y     ; Get the current bar color                    4 cycles      
-        STA $D020        ; and set it for border                        4 cycles
-        STA $D021        ; and background color                         4 cycles
+barlo1  INY             ; Next color
 
-        LDA #%11111000
-        AND $D011
-        STA $D011
-        TYA
+        LDA barcol,Y    ; Get the current bar color                    4 cycles      
+        STA $D020       ; and set it for border                        4 cycles
+        STA $D021       ; and background color                         4 cycles
+
+        LDA $D011       ; We need to avoid badlines, we get the current
+        AND #%11111000  ; VIC control register 1 and set the bits 2-0 to the
+        STA TMP1        ; current raster line % 8. So, unless we start on a bad
+        TYA             ; line there will never be a bad line.
         AND #%00000111
-        ORA $D011
+        ORA TMP1
         STA $D011
 
-                
-        LDX #3           ; This block completes the        2+(88*5)-1 441 cycles         
-        DEX              ; amount of cycles needed to fill exactly
-        BNE *-1          ; 8 lines of which one is a bad line
+        LDX #3          ; This block completes the        2+(88*5)-1 441 cycles         
+        DEX             ; amount of cycles needed to fill exactly
+        BNE *-1         ; 8 lines of which one is a bad line
         NOP
         NOP
 
         TYA
-        CMP #1
+        CMP #16
         BNE barlo1
 
         BIT $00
@@ -198,13 +198,14 @@ barlo1  INY
 
         RTI
 
-; These are the bars color codes. Rightmost value is the first
-; bar. We need to ensure this stuff is all within a page as we load
+; These are the bars color codes. 
+; We need to ensure this stuff is all within a page as we load
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-barcol   BYTE 3,2,1,2,1,2,1,2
-barcol1  BYTE 1,2,5,2,5,2,5,2
-barcol2  BYTE 1,2,5,2,5,2,5,2
+BARCOL  BYTE 3,2,1,2,1,2,1,2
+        BYTE 1,2,5,2,5,2,5,2
+        BYTE 1,2,5,2,5,2,5,2
+TMP1    BYTE 0
 
 ;,1,2,1,2,1,2,1,2,1,2
