@@ -49,9 +49,9 @@ start   SEI             ; Prevent interrupts while we set things up
         LDA #$35        ; Disable kernal and BASIC ROMs
         STA $01         ; we go bare metal.
 
-        LDA #<irq       ; Setup the interrupt vector to our function  
+        LDA #<ISR       ; Setup the interrupt vector to our function  
         STA $FFFE       ; note that this vector is for ALL interrupts,
-        LDA #>irq       ; not only the VIC raster interrupt.
+        LDA #>ISR       ; not only the VIC raster interrupt.
         STA $FFFF       ; Anyhow all others are disabled.
 
         CLI             ; Let interrupts come 
@@ -61,13 +61,13 @@ start   SEI             ; Prevent interrupts while we set things up
         ; so we maximise the raster interrupt jitter to simulate
         ; real code.
 
-loop    LDA #1          ; 2 cycles
+LOOP    LDA #1          ; 2 cycles
         LDA $01         ; 3 cycles
         LDA $0300       ; 4 cycles
         LDA ($04),Y     ; 5 cycles      
         LDA ($04,X)     ; 6 cycles 
         LSR $0300,X     ; 7 cycles
-        JMP loop
+        JMP LOOP
 
         ; This is the first raster interrupt service routine.
         ; By the time we come here we can be anywhere from the
@@ -75,16 +75,16 @@ loop    LDA #1          ; 2 cycles
         ; the instruction that was execuing when the interrupt
         ; occurred.
 
-irq     PHA             ; Preserve A,X,Y on the stack
+ISR     PHA             ; Preserve A,X,Y on the stack
         TXA
         PHA
         TYA
         PHA
         
         INC $D012       ; Setup another raster interrupt for the next
-        LDA #<irq2      ; scan line   
+        LDA #<ISR2      ; scan line   
         STA $FFFE       
-        LDA #>irq2      
+        LDA #>ISR2      
         STA $FFFF
 
         TSX             ; We are about to let another interrupt happen
@@ -123,7 +123,7 @@ irq     PHA             ; Preserve A,X,Y on the stack
         ; the delay loop needs to be changed for NTSC.
 
                         ; Interrupt servicing (during a NOP)          2/3 cycles                                               
-irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles   
+ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles   
         
         LDY #8          ; This loop, the interrput call the above TXS and 
         DEY             ; the below BIT and LDA take exactly one scan line 
@@ -131,8 +131,8 @@ irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
                         ;                                              46 cycles 
         BIT $00
 
-        LDA $d012       ; Get current scan line                         4 cycles
-        CMP $d012       ; Here we are either still on the same line     4 cycles
+        LDA $D012       ; Get current scan line                         4 cycles
+        CMP $D012       ; Here we are either still on the same line     4 cycles
                         ; (with one cycle to go) or at the next line.
         BEQ *+2         ; If we are on same line branch (3 cycles)    3/2 cycles
                         ; else move on (2 cycles). Note that in both
@@ -149,13 +149,13 @@ irq2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         LDY #$FF        ; Y will be used to index table barcol, we start from FF
                         ; so when we INY below we roll to 00
 
-barlo1  INY             ; Next color
+BLOOP   INY             ; Next color
 
-        LDA barcol,Y    ; Get the current bar color                    4 cycles      
+        LDA BARCOL,Y    ; Get the current bar color                    4 cycles      
         STA $D020       ; and set it for border                        4 cycles
         STA $D021       ; and background color                         4 cycles
 
-        LDA $D011       ; We need to avoid badlines, we get the current
+        LDA $D011       ; We need to avoid bad lines, we get the current
         AND #%11111000  ; VIC control register 1 and set the bits 2-0 to the
         STA TMP1        ; current raster line % 8. So, unless we start on a bad
         TYA             ; line there will never be a bad line.
@@ -163,29 +163,27 @@ barlo1  INY             ; Next color
         ORA TMP1
         STA $D011
 
-        LDX #3          ; This block completes the        2+(88*5)-1 441 cycles         
-        DEX             ; amount of cycles needed to fill exactly
-        BNE *-1         ; 8 lines of which one is a bad line
+        LDX #3          ; Waste some time so that BLOOP is exactly one raster                 
+        DEX             ; line long.
+        BNE *-1         
         NOP
-        NOP
+        
+        LDA BARCOL,Y    ; If bit7 of the current color is set we reached the end
+        AND #%10000000  ; of the bar.
+        BEQ BLOOP
 
-        TYA
-        CMP #16
-        BNE barlo1
-
-        BIT $00
-        LDA #0           ; Back to black. 
-        STA $D020        ;
-        STA $D021        ; 
+        LDA #0          ; Back to black. We are couple of cycles shy of the end  
+        STA $D021       ; of the line (so in the border), set background before
+        STA $D020       ; border so all looks nice.
 
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
 
         LDA #RASSTART   ; Set raster interrupt to the start of the bar
         STA $D012
-        LDA #<irq        
+        LDA #<ISR        
         STA $FFFE       
-        LDA #>irq       
+        LDA #>ISR       
         STA $FFFF
 
         ASL $D019       ; Clear the interrupt flag        
@@ -203,9 +201,16 @@ barlo1  INY             ; Next color
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-BARCOL  BYTE 3,2,1,2,1,2,1,2
-        BYTE 1,2,5,2,5,2,5,2
-        BYTE 1,2,5,2,5,2,5,2
-TMP1    BYTE 0
+BARCOL  BYTE 6,14,14,6,11,0,0
+        BYTE 6,6,6,14,14,14,14,6,11,0,0
+        BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
+        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,128
+        BYTE 12,7,12,7,12,12,12,12,12,7,12,7
+        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,0,0
+        BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
+        BYTE 6,6,6,14,14,14,14,6,11,0,0
+        BYTE 6,14,14,6,12,0,0
 
-;,1,2,1,2,1,2,1,2,1,2
+        BYTE 128
+
+TMP1    BYTE 0
