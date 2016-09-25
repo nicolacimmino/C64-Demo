@@ -29,7 +29,7 @@
 ; *
 ; * Constants
 ; *
-RASSTART = 49           ; Raster line where the raster interrupt starts
+RASSTART = 59           ; Raster line where the raster interrupt starts
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -38,15 +38,19 @@ start   SEI             ; Prevent interrupts while we set things up
         JSR $FF81       ; Reset VIC, clear screen
         LDA #%01111111  ; Disable CIA-1 interrupts
         STA $DC0D
-        LDA #$01        ; Enable raster interrupt
+        STA $DD0D
+        LDA #%00000001  ; Enable raster interrupt
         STA $D01A
+        LDA $DC0D       ; acknowledge CIA 
+        LSR $D019       ; and video interrupts
+        
         LDA #RASSTART   ; Set raster interrupt line
         STA $D012
         LDA #%01111111  ; Clear RST8 bit, the interrupt line is
         AND $D011       ; above raster line 255 
         STA $D011        
 
-        LDA #$35        ; Disable kernal and BASIC ROMs
+        LDA #%00110101  ; Disable kernal and BASIC ROMs
         STA $01         ; we go bare metal.
 
         LDA #<ISR       ; Setup the interrupt vector to our function  
@@ -70,29 +74,29 @@ LOOP    LDA #1          ; 2 cycles
         JMP LOOP
 
         ; This is the first raster interrupt service routine.
-        ; By the time we come here we can be anywhere from the
-        ; start of the desired line to +7 cycles depending on
-        ; the instruction that was execuing when the interrupt
-        ; occurred.
+        ; By the time we come here we can be anywhere on the
+        ; desired line with a jitter of 7 cycles depending on
+        ; the instruction executing when the interrupt appened.
 
 ISR     PHA             ; Preserve A,X,Y on the stack
         TXA
         PHA
         TYA
         PHA
-        
-        INC $D012       ; Setup another raster interrupt for the next
-        LDA #<ISR2      ; scan line   
-        STA $FFFE       
-        LDA #>ISR2      
-        STA $FFFF
 
         TSX             ; We are about to let another interrupt happen
                         ; without calling RTI, so there will be one extra
                         ; return address on the stack. Save the good stack
                         ; pointer into X, we will restore it later before RTI
         
-        ASL $D019       ; Acknoweledge and clear the interrupt flag        
+        INC $D012       ; Setup another raster interrupt for the next
+        LDA #<ISR2      ; scan line   
+        STA $FFFE       
+        LDA #>ISR2      
+        STA $FFFF
+        
+        LDA #%00000001
+        STA $D019       ; Acknoweledge the interrupt  
         CLI
 
         NOP             ; Waste time waiting the interrupt to happen
@@ -113,6 +117,9 @@ ISR     PHA             ; Preserve A,X,Y on the stack
         NOP
         NOP
         NOP             ; These are enough to complete a scan line.
+        ; We will never come here as the interrupt will happen
+        ; before and by resetting the stack pointer RTI will not
+        ; return here either.
 
         ; This is the second raster interrupt routine. By the time
         ; we come here we have a jitter of just one cycle as we ensured
@@ -129,7 +136,7 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         DEY             ; the below BIT and LDA take exactly one scan line 
         BNE *-1         ; minus 1 cycle.
                         ;                                              46 cycles 
-        BIT $00
+        BIT $00         ;                                               3 cycles
 
         LDA $D012       ; Get current scan line                         4 cycles
         CMP $D012       ; Here we are either still on the same line     4 cycles
@@ -146,19 +153,19 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         DEY             ; are in the horizontal sync area 
         BNE *-1         ; 
 
-        LDY #$FF        ; Y will be used to index table barcol, we start from FF
+        LDY #$FF        ; Y will be used to index table BARCOL, we start from FF
                         ; so when we INY below we roll to 00
 
-BLOOP   INY             ; Next color
+BLOOP   INY             ; Next color entry
 
-        LDA BARCOL,Y    ; Get the current bar color                    4 cycles      
-        STA $D020       ; and set it for border                        4 cycles
-        STA $D021       ; and background color                         4 cycles
+        LDA BARCOL,Y    ; Get the current bar color                          
+        STA $D020       ; and set it for border                        
+        STA $D021       ; and background color                         
 
         LDA $D011       ; We need to avoid bad lines, we get the current
-        AND #%11111000  ; VIC control register 1 and set the bits 2-0 to the
-        STA TMP1        ; current raster line % 8. So, unless we start on a bad
-        TYA             ; line there will never be a bad line.
+        AND #%11111000  ; VIC control register 1 and set the bits 2-0 (YSCROLL) 
+        STA TMP1        ; to the current value of Y % 8. So, unless we start on
+        TYA             ; a bad line, there will never be a bad line.
         AND #%00000111
         ORA TMP1
         STA $D011
@@ -179,6 +186,10 @@ BLOOP   INY             ; Next color
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
 
+        LDA #%11111000         
+        AND $D011       
+        STA $D011 
+
         LDA #RASSTART   ; Set raster interrupt to the start of the bar
         STA $D012
         LDA #<ISR        
@@ -186,7 +197,8 @@ BLOOP   INY             ; Next color
         LDA #>ISR       
         STA $FFFF
 
-        ASL $D019       ; Clear the interrupt flag        
+        LDA #1
+        STA $D019       ; Aknoweledge the interrupt        
         
         PLA             ; Restore Y,X,A from the stack
         TAY
@@ -204,7 +216,7 @@ BLOOP   INY             ; Next color
 BARCOL  BYTE 6,14,14,6,11,0,0
         BYTE 6,6,6,14,14,14,14,6,11,0,0
         BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
-        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,128
+        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,0
         BYTE 12,7,12,7,12,12,12,12,12,7,12,7
         BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,0,0
         BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
