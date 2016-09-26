@@ -30,6 +30,7 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
+TMP1     = $000B        ; Page 0 location for temporary storage
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -161,6 +162,8 @@ BLOOP   INY             ; Next color entry
         LDA BARCOL,Y    ; Get the current bar color                          
         STA $D020       ; and set it for border                        
         STA $D021       ; and background color                         
+        AND #%10000000  ; of the bar.
+        BNE BLEND
 
         LDA $D011       ; We need to avoid bad lines, we get the current
         AND #%11111000  ; VIC control register 1 and set the bits 2-0 (YSCROLL) 
@@ -173,20 +176,14 @@ BLOOP   INY             ; Next color entry
         LDX #3          ; Waste some time so that BLOOP is exactly one raster                 
         DEX             ; line long.
         BNE *-1         
-        NOP
+        LDA ($04,X)     ; 6 more cycles
         
-        LDA BARCOL,Y    ; If bit7 of the current color is set we reached the end
-        AND #%10000000  ; of the bar.
-        BEQ BLOOP
-
-        LDA #0          ; Back to black. We are couple of cycles shy of the end  
-        STA $D021       ; of the line (so in the border), set background before
-        STA $D020       ; border so all looks nice.
-
+        JMP BLOOP
+           
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
 
-        LDA #%11111000         
+BLEND   LDA #%11111000  ; Restore YSCROLL to 0         
         AND $D011       
         STA $D011 
 
@@ -217,6 +214,4 @@ BARCOL  BYTE 06,06,00,06,06,06,06,14
         BYTE 06,14,14,03,14,03,03,03
         BYTE 01,03,01,01,01,03,01,03
         BYTE 03,03,14,03,14,14,06,14
-        BYTE 6,6,6,6,0,6,134
-
-TMP1    BYTE 0
+        BYTE 6,6,6,6,0,6,6,128
