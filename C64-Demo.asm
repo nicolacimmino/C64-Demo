@@ -213,16 +213,10 @@ BLOOP   INY             ; Next color entry
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-BARCOL  BYTE 6,14,14,6,11,0,0
-        BYTE 6,6,6,14,14,14,14,6,11,0,0
-        BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
-        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,0
-        BYTE 12,7,12,7,12,12,12,12,12,7,12,7
-        BYTE 6,6,6,14,14,14,14,3,3,3,7,7,7,7,12,0,0
-        BYTE 6,6,6,14,14,14,14,3,3,3,12,0,0
-        BYTE 6,6,6,14,14,14,14,6,11,0,0
-        BYTE 6,14,14,6,12,0,0
-
-        BYTE 128
+BARCOL  BYTE 06,06,00,06,06,06,06,14
+        BYTE 06,14,14,03,14,03,03,03
+        BYTE 01,03,01,01,01,03,01,03
+        BYTE 03,03,14,03,14,14,06,14
+        BYTE 6,6,6,6,0,6,134
 
 TMP1    BYTE 0
