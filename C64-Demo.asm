@@ -157,28 +157,33 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         LDY #$FF        ; Y will be used to index table BARCOL, we start from FF
                         ; so when we INY below we roll to 00
 
-BLOOP   INY             ; Next color entry
+BLOOP   INY             ; Next colour entry
 
-        LDA BARCOL,Y    ; Get the current bar color                          
+        LDA BARCOL,Y    ; Get the current bar colour                          
         STA $D020       ; and set it for border                        
-        STA $D021       ; and background color                         
-        AND #%10000000  ; of the bar.
-        BNE BLEND
-
-        LDA $D011       ; We need to avoid bad lines, we get the current
-        AND #%11111000  ; VIC control register 1 and set the bits 2-0 (YSCROLL) 
-        STA TMP1        ; to the current value of Y % 8. So, unless we start on
-        TYA             ; a bad line, there will never be a bad line.
-        AND #%00000111
-        ORA TMP1
+        STA $D021       ; and background colour                         
+        
+        LDA $D012       ; We need to avoid bad lines, we set YSCROLL to
+        CLC             ; (current raster line + 7)%8 so that the bad line
+        ADC #7          ; is always the previous line.
+        AND #%00000111  
+        ORA #%00011000  
         STA $D011
 
-        LDX #3          ; Waste some time so that BLOOP is exactly one raster                 
-        DEX             ; line long.
-        BNE *-1         
-        LDA ($04,X)     ; 6 more cycles
-        
-        JMP BLOOP
+        BIT $00         ; Waste 3 cycles                
+        LDA #0          ; Black vertical bar starts here...
+        STA $D021
+        NOP       
+        LDA BARCOL,Y    ; ...and ends here                  
+        STA $D021       ;  
+        BIT $00         ; Waste more cycles to complete the raster line
+        NOP       
+        NOP
+                        
+        AND #%10000000  ; We still have the colour from BARCOL in A, test bit-7
+        BNE BLEND       ; if set we are done with the bar
+ 
+        JMP BLOOP       ; And repeat for next colour.
            
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
@@ -205,7 +210,7 @@ BLEND   LDA #%11111000  ; Restore YSCROLL to 0
 
         RTI
 
-; These are the bars color codes. 
+; These are the bars colour codes. 
 ; We need to ensure this stuff is all within a page as we load
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
