@@ -30,7 +30,6 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
-TMP1     = $000B        ; Page 0 location for temporary storage
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -188,9 +187,12 @@ BLOOP   INY             ; Next colour entry
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
 
-BLEND   LDA #%11111000  ; Restore YSCROLL to 0         
-        AND $D011       
-        STA $D011 
+BLEND   LDA #RASSTART   ; Ensure the next interrupt will not happen on a
+        CLC             ; bad line, set YSCROLL so the badline is one before
+        ADC #7          ; the next interrupt.
+        AND #%00000111  
+        ORA #%00011000  
+        STA $D011
 
         LDA #RASSTART   ; Set raster interrupt to the start of the bar
         STA $D012
