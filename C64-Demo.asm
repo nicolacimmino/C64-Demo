@@ -30,19 +30,23 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
-ZEROVAL  = 20           ; Zero page location set always to zero
+ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
 
-start   SEI             ; Prevent interrupts while we set things up
+        SEI             ; Prevent interrupts while we set things up
         JSR $FF81       ; Reset VIC, clear screen
+
+        LDA #%00110101  ; Disable kernal and BASIC ROMs
+        STA $01         ; we go bare metal.
+
         LDA #%01111111  ; Disable CIA-1 interrupts
         STA $DC0D
         STA $DD0D
         LDA #%00000001  ; Enable raster interrupt
         STA $D01A
-        LDA $DC0D       ; acknowledge CIA 
+        LDA $DC0D       ; Acknowledge CIA 
         LSR $D019       ; and video interrupts
         
         LDA #RASSTART   ; Set raster interrupt line
@@ -51,28 +55,25 @@ start   SEI             ; Prevent interrupts while we set things up
         AND $D011       ; above raster line 255 
         STA $D011        
 
-        LDA #%00110101  ; Disable kernal and BASIC ROMs
-        STA $01         ; we go bare metal.
-
-        LDA #0
-        STA ZEROVAL
-
         LDA #<ISR       ; Setup the interrupt vector to our function  
         STA $FFFE       ; note that this vector is for ALL interrupts,
         LDA #>ISR       ; not only the VIC raster interrupt.
         STA $FFFF       ; Anyhow all others are disabled.
 
-        LDA #$80        ;Sprite 0 pointer to $2000
+        LDA #0          ; Ensure we have a zero in a page zero location
+        STA ZEROVAL     ; see other §1 comments for usage
+
+        LDA #$80        ; Sprite 0 pointer to $2000
         STA $07F8
         LDA #%0000001   ; Enable sprite 0
         STA $D015
-        STA $D017       ; Double Y
-        STA $D01D       ; Double X
+        STA $D017       ; Double height for sprite 0
+        STA $D01D       ; Double width fo sprite 0
 
-        lda #160
-        sta $d000
-        lda #RASSTART+1
-        sta $d001
+        lda #160        ; Position the sprite in the middle of the bar
+        sta $d000       ; break and just one line after the start (so 
+        lda #RASSTART+1 ; the jitter offset line is not affected by 
+        sta $d001       ; shorter raster lines).
 
         CLI             ; Let interrupts come 
 
@@ -176,7 +177,6 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
 
 BLOOP   INY             ; Next colour entry
 
-
         LDA $D012       ; We need to avoid bad lines, we set YSCROLL to
         CLC             ; (current raster line + 7)%8 so that the bad line
         ADC #7          ; is always the previous line.
@@ -184,21 +184,19 @@ BLOOP   INY             ; Next colour entry
         ORA #%00011000  
         STA $D011
 
-;        BIT $00         ; Waste 3 cycles                
-        LDA ZEROVAL          ; Black vertical bar starts here...
+        LDA ZEROVAL     ; Black vertical bar starts here...
         STA $D021
         NOP       
-        
-        LDA BARCOL,Y    ; ...and ends here                  
-        STA $D021       ;  
-        BIT $00         ; Waste more cycles to complete the raster line
+        LDA BARCOL,Y                       
+        STA $D021       ; ...and ends here
+        BIT $00         ; Waste more cycles to fill up the raster line
         NOP
 
         LDA BARCOL,Y    ; Get the current bar colour                          
         STA $D020       ; and set it for border                        
         STA $D021       ; and background colour                         
                                 
-        AND #%10000000  ; We still have the colour from BARCOL in A, test bit-7
+        AND #%10000000  ; Test bit-7 of the colour is set
         BNE BLEND       ; if set we are done with the bar
  
         JMP BLOOP       ; And repeat for next colour.
@@ -242,6 +240,7 @@ BARCOL  BYTE 06,06,00,06,06,06,06,14
         BYTE 03,03,14,03,14,14,06,14
         BYTE 6,6,6,6,0,6,6,128
 
+; Spite data
 *=$2000 
 SPRITE0 BYTE $FF,$FF,$FF,$80,$00,$01,$80,$00
         BYTE $01,$80,$00,$01,$80,$00,$01,$80
