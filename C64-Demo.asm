@@ -30,6 +30,7 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
+ZEROVAL  = 20           ; Zero page location set always to zero
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -53,10 +54,25 @@ start   SEI             ; Prevent interrupts while we set things up
         LDA #%00110101  ; Disable kernal and BASIC ROMs
         STA $01         ; we go bare metal.
 
+        LDA #0
+        STA ZEROVAL
+
         LDA #<ISR       ; Setup the interrupt vector to our function  
         STA $FFFE       ; note that this vector is for ALL interrupts,
         LDA #>ISR       ; not only the VIC raster interrupt.
         STA $FFFF       ; Anyhow all others are disabled.
+
+        LDA #$80        ;Sprite 0 pointer to $2000
+        STA $07F8
+        LDA #%0000001   ; Enable sprite 0
+        STA $D015
+        STA $D017       ; Double Y
+        STA $D01D       ; Double X
+
+        lda #160
+        sta $d000
+        lda #RASSTART+1
+        sta $d001
 
         CLI             ; Let interrupts come 
 
@@ -137,6 +153,8 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
         BNE *-1         ; minus 1 cycle.
                         ;                                              46 cycles 
         BIT $00         ;                                               3 cycles
+        NOP
+        NOP
 
         LDA $D012       ; Get current scan line                         4 cycles
         CMP $D012       ; Here we are either still on the same line     4 cycles
@@ -149,7 +167,7 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
 
         ; From here on we are stable.
 
-        LDY #10         ; Push forward so the STA $D020/1 
+        LDY #10          ; Push forward so the STA $D020/1 
         DEY             ; are in the horizontal sync area 
         BNE *-1         ; 
 
@@ -158,10 +176,7 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
 
 BLOOP   INY             ; Next colour entry
 
-        LDA BARCOL,Y    ; Get the current bar colour                          
-        STA $D020       ; and set it for border                        
-        STA $D021       ; and background colour                         
-        
+
         LDA $D012       ; We need to avoid bad lines, we set YSCROLL to
         CLC             ; (current raster line + 7)%8 so that the bad line
         ADC #7          ; is always the previous line.
@@ -169,16 +184,20 @@ BLOOP   INY             ; Next colour entry
         ORA #%00011000  
         STA $D011
 
-        BIT $00         ; Waste 3 cycles                
-        LDA #0          ; Black vertical bar starts here...
+;        BIT $00         ; Waste 3 cycles                
+        LDA ZEROVAL          ; Black vertical bar starts here...
         STA $D021
         NOP       
+        
         LDA BARCOL,Y    ; ...and ends here                  
         STA $D021       ;  
         BIT $00         ; Waste more cycles to complete the raster line
-        NOP       
         NOP
-                        
+
+        LDA BARCOL,Y    ; Get the current bar colour                          
+        STA $D020       ; and set it for border                        
+        STA $D021       ; and background colour                         
+                                
         AND #%10000000  ; We still have the colour from BARCOL in A, test bit-7
         BNE BLEND       ; if set we are done with the bar
  
@@ -222,3 +241,15 @@ BARCOL  BYTE 06,06,00,06,06,06,06,14
         BYTE 01,03,01,01,01,03,01,03
         BYTE 03,03,14,03,14,14,06,14
         BYTE 6,6,6,6,0,6,6,128
+
+*=$2000 
+SPRITE0 BYTE $FF,$FF,$FF,$80,$00,$01,$80,$00
+        BYTE $01,$80,$00,$01,$80,$00,$01,$80
+        BYTE $00,$01,$80,$00,$01,$80,$00,$01
+        BYTE $80,$00,$01,$80,$00,$01,$80,$00
+        BYTE $01,$80,$00,$01,$80,$00,$01,$80
+        BYTE $00,$01,$80,$00,$01,$80,$00,$01
+        BYTE $80,$00,$01,$80,$00,$01,$80,$00
+        BYTE $01,$80,$00,$01,$FF,$FF,$FF
+
+

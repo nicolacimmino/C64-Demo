@@ -37,5 +37,16 @@
             <Topmost>True</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
+        <SourceFile>
+            <Name>Sprite1.spt</Name>
+            <PrgName />
+            <FileType>7</FileType>
+            <IncludeInBuild>True</IncludeInBuild>
+            <Regions />
+            <Breakpoints />
+            <Bookmarks />
+            <Topmost>False</Topmost>
+            <FileOpen>False</FileOpen>
+        </SourceFile>
     </SourceFiles>
 </Project>
