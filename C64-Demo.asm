@@ -31,6 +31,8 @@
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
 ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
+TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
+TIMERB   = 22           ; Time base, roughly 2 per second (TIMERA/32)
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -41,12 +43,12 @@ ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
         LDA #%00110101  ; Disable kernal and BASIC ROMs
         STA $01         ; we go bare metal.
 
-        LDA #%01111111  ; Disable CIA-1 interrupts
+        LDA #%01111111  ; Disable CIA-1/2 interrupts
         STA $DC0D
         STA $DD0D
         LDA #%00000001  ; Enable raster interrupt
         STA $D01A
-        LDA $DC0D       ; Acknowledge CIA 
+        LSR $DC0D       ; Acknowledge CIA 
         LSR $D019       ; and video interrupts
         
         LDA #RASSTART   ; Set raster interrupt line
@@ -62,6 +64,8 @@ ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 
         LDA #0          ; Ensure we have a zero in a page zero location
         STA ZEROVAL     ; see other §1 comments for usage
+        STA TIMERA      ; Initialize time base accumulators
+        STA TIMERB      ;
 
         LDA #$80        ; Sprite 0 pointer to $2000
         STA $07F8
@@ -71,9 +75,11 @@ ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
         STA $D01D       ; Double width fo sprite 0
 
         lda #160        ; Position the sprite in the middle of the bar
-        sta $d000       ; break and just one line after the start (so 
-        lda #RASSTART+1 ; the jitter offset line is not affected by 
-        sta $d001       ; shorter raster lines).
+        sta $D000       ; break and just two lines after the start (so 
+        lda #RASSTART+2 ; the jitter offset lines are not affected by 
+        sta $D001       ; shorter raster lines). Also the bar cannot
+                        ; be taller than the sprite as the line timing
+                        ; will changes as soon as out of the sprite area.
 
         CLI             ; Let interrupts come 
 
@@ -112,8 +118,8 @@ ISR     PHA             ; Preserve A,X,Y on the stack
         LDA #>ISR2      
         STA $FFFF
         
-        LDA #%00000001
-        STA $D019       ; Acknoweledge the interrupt  
+        LSR $D019       ; Acknoweledge video interrupts
+        
         CLI
 
         NOP             ; Waste time waiting the interrupt to happen
@@ -137,7 +143,7 @@ ISR     PHA             ; Preserve A,X,Y on the stack
         ; We will never come here as the interrupt will happen
         ; before and by resetting the stack pointer RTI will not
         ; return here either.
-
+        
         ; This is the second raster interrupt routine. By the time
         ; we come here we have a jitter of just one cycle as we ensured
         ; this interrupt happens while executing NOPs (2 cycles).
@@ -165,12 +171,13 @@ ISR2    TXS             ; Restore the SP messed by the interrupt.       2 cycles
                         ; cases we end up at the next instruction, but it
                         ; will take different time to get there so we 
                         ; offset the remaining 1 cycle jitter.
-
+                        
         ; From here on we are stable.
 
-        LDY #10          ; Push forward so the STA $D020/1 
+        LDY #10         ; Push forward so the STA $D020/1 
         DEY             ; are in the horizontal sync area 
         BNE *-1         ; 
+        BIT $00
 
         LDY #$FF        ; Y will be used to index table BARCOL, we start from FF
                         ; so when we INY below we roll to 00
@@ -184,10 +191,11 @@ BLOOP   INY             ; Next colour entry
         ORA #%00011000  
         STA $D011
 
-        LDA ZEROVAL     ; Black vertical bar starts here...
-        STA $D021
-        NOP       
-        LDA BARCOL,Y                       
+        LDA ZEROVAL     ; We need zero in A in 3 cylcles so we load from page
+                        ; zero from a location we set to zero. See §1 comments.
+        STA $D021       ; Black vertical bar starts here...
+        NOP             ; 
+        LDA BARCOL,Y    ;                   
         STA $D021       ; ...and ends here
         BIT $00         ; Waste more cycles to fill up the raster line
         NOP
@@ -204,23 +212,31 @@ BLOOP   INY             ; Next colour entry
         ; We are done with the interrupt, we need to set up
         ; the next one and restore registers before leaving.
 
-BLEND   LDA #RASSTART   ; Ensure the next interrupt will not happen on a
-        CLC             ; bad line, set YSCROLL so the badline is one before
-        ADC #7          ; the next interrupt.
-        AND #%00000111  
+BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
+        STA $D012
+        CLC             ; Ensure the next interrupt will not happen on a
+        ADC #7          ; bad line, set YSCROLL so the badline is one before
+        AND #%00000111  ; the next interrupt.
         ORA #%00011000  
         STA $D011
 
-        LDA #RASSTART   ; Set raster interrupt to the start of the bar
-        STA $D012
         LDA #<ISR        
         STA $FFFE       
         LDA #>ISR       
         STA $FFFF
-
-        LDA #1
-        STA $D019       ; Aknoweledge the interrupt        
         
+        INC TIMERB      ; Increment time base
+        LDA TIMERA
+        CLC
+        ROR
+        ROR
+        ROR
+        ROR
+        ROR
+        STA TIMERB      ; Timer B is TIMERA/32
+
+        LSR $D019       ; Acknoweledge video interrupts
+             
         PLA             ; Restore Y,X,A from the stack
         TAY
         PLA
@@ -234,11 +250,14 @@ BLEND   LDA #RASSTART   ; Ensure the next interrupt will not happen on a
 ; it with an LDA absolute,X which takes one more cycle if the indexed
 ; value is on a different page of the absolute value.
 *=$E000
-BARCOL  BYTE 06,06,00,06,06,06,06,14
+BARCOL  BYTE 00,00,00,06,06,00,06,06,06,06,14
         BYTE 06,14,14,03,14,03,03,03
         BYTE 01,03,01,01,01,03,01,03
         BYTE 03,03,14,03,14,14,06,14
-        BYTE 6,6,6,6,0,6,6,128
+        BYTE 6,6,6,6,0,6,128
+
+; Sprite offsets
+SPOFF   BYTE 0
 
 ; Spite data
 *=$2000 
