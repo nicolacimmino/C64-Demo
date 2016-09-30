@@ -38,7 +38,7 @@
             <FileOpen>True</FileOpen>
         </SourceFile>
         <SourceFile>
-            <Name>Sprite1.spt</Name>
+            <Name>SpriteSet1.spt</Name>
             <PrgName />
             <FileType>7</FileType>
             <IncludeInBuild>True</IncludeInBuild>

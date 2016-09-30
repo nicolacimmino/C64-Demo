@@ -5,33 +5,33 @@
     <include>True</include>
     <multi>False</multi>
     <spbkgnd>1</spbkgnd>
-    <spcolour>2</spcolour>
+    <spcolour>0</spcolour>
     <mcolour1>6</mcolour1>
     <mcolour2>7</mcolour2>
     <expandx>False</expandx>
     <expandy>False</expandy>
     <sdata>
-      <data>16777215</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>8388609</data>
-      <data>16777215</data>
+      <data>32512</data>
+      <data>131008</data>
+      <data>262112</data>
+      <data>255968</data>
+      <data>514544</data>
+      <data>516080</data>
+      <data>514544</data>
+      <data>255968</data>
+      <data>262112</data>
+      <data>262112</data>
+      <data>196512</data>
+      <data>98112</data>
+      <data>81472</data>
+      <data>40064</data>
+      <data>40064</data>
+      <data>18688</data>
+      <data>18688</data>
+      <data>15872</data>
+      <data>15872</data>
+      <data>15872</data>
+      <data>7168</data>
     </sdata>
    </sprite>
     <!-- Scratchpad data -->

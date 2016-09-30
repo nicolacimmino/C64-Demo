@@ -74,10 +74,10 @@ TIMERB   = 22           ; Time base, roughly 2 per second (TIMERA/32)
         STA $D017       ; Double height for sprite 0
         STA $D01D       ; Double width fo sprite 0
 
-        lda #160        ; Position the sprite in the middle of the bar
-        sta $D000       ; break and just two lines after the start (so 
-        lda #RASSTART+2 ; the jitter offset lines are not affected by 
-        sta $D001       ; shorter raster lines). Also the bar cannot
+        LDA #160        ; Position the sprite in the middle of the bar
+        STA $D000       ; break and just two lines after the start (so 
+        LDA #RASSTART+2 ; the jitter offset lines are not affected by 
+        STA $D001       ; shorter raster lines). Also the bar cannot
                         ; be taller than the sprite as the line timing
                         ; will changes as soon as out of the sprite area.
 
@@ -225,15 +225,19 @@ BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         LDA #>ISR       
         STA $FFFF
         
-        INC TIMERB      ; Increment time base
+        INC TIMERA      ; Increment time base
         LDA TIMERA
         CLC
         ROR
         ROR
-        ROR
-        ROR
-        ROR
-        STA TIMERB      ; Timer B is TIMERA/32
+        STA TIMERB      ; Timer B is TIMERA/4
+
+        AND #%00011111
+        TAX
+        LDA SPOFF,X
+        CLC
+        ADC #144
+        STA $D000
 
         LSR $D019       ; Acknoweledge video interrupts
              
@@ -254,18 +258,27 @@ BARCOL  BYTE 00,00,00,06,06,00,06,06,06,06,14
         BYTE 06,14,14,03,14,03,03,03
         BYTE 01,03,01,01,01,03,01,03
         BYTE 03,03,14,03,14,14,06,14
-        BYTE 6,6,6,6,0,6,128
+        BYTE 06,06,06,06,00,06,128
 
-; Sprite offsets
-SPOFF   BYTE 0
+; Sprite offsets, this describes an harmonic motion for the piece
+; at the center of the bar. A linear (constant speed) one could be
+; done in software but this looks better.
+SPOFF   BYTE 16,19,22,25,27,29,31,31
+        BYTE 31,31,30,28,26,23,20,17
+        BYTE 14,11,08,05,03,01,00,00
+        BYTE 00,00,02,04,06,09,12,15
 
 ; Spite data
 *=$2000 
-SPRITE0 BYTE 0,127,0,1,255,192,3,255,224,3,231,224
-        BYTE 7,217,240,7,223,240,7,217,240,3,231,224
-        BYTE 3,255,224,3,255,224,2,255,160,1,127,64
-        BYTE 1,62,64,0,156,128,0,156,128,0,73,0,0,73,0
-        BYTE 0,62,0,0,62,0,0,62,0,0,28,0,0
+SPRITE0 BYTE $00,$7F,$00,$01,$FF,$C0,$03,$FF
+        BYTE $E0,$03,$E7,$E0,$07,$D9,$F0,$07
+        BYTE $DF,$F0,$07,$D9,$F0,$03,$E7,$E0
+        BYTE $03,$FF,$E0,$03,$FF,$E0,$02,$FF
+        BYTE $A0,$01,$7F,$40,$01,$3E,$40,$00
+        BYTE $9C,$80,$00,$9C,$80,$00,$49,$00
+        BYTE $00,$49,$00,$00,$3E,$00,$00,$3E
+        BYTE $00,$00,$3E,$00,$00,$1C,$00,$00
+
 
 
 
