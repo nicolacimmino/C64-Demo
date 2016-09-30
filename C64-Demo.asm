@@ -32,7 +32,7 @@
 RASSTART = 59           ; Raster line where the raster interrupt starts
 ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
-TIMERB   = 22           ; Time base, roughly 2 per second (TIMERA/32)
+TIMERB   = 22           ; Time base, roughly 12 per second (TIMERA/4)
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -214,17 +214,25 @@ BLOOP   INY             ; Next colour entry
 
 BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         STA $D012
+
         CLC             ; Ensure the next interrupt will not happen on a
         ADC #7          ; bad line, set YSCROLL so the badline is one before
-        AND #%00000111  ; the next interrupt.
-        ORA #%00011000  
+        AND #%00000111  ; the next interrupt (RASTART is in A at the start
+        ORA #%00011000  ; of this block)
         STA $D011
 
-        LDA #<ISR        
-        STA $FFFE       
+        LDA #<ISR       ; Set the interrupt vector back to the first ISR        
+        STA $FFFE       ; (the raster sync one)
         LDA #>ISR       
         STA $FFFF
+
+        LSR $D019       ; Acknoweledge video interrupts
         
+        ; This is a good time to take care of the time base.
+        ; We increment TIMERA once per frame and TIMERB at a 4th of
+        ; that rate. These serve as time base for animations, scrolls
+        ; and music.
+
         INC TIMERA      ; Increment time base
         LDA TIMERA
         CLC
@@ -232,14 +240,15 @@ BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         ROR
         STA TIMERB      ; Timer B is TIMERA/4
 
-        AND #%00011111
-        TAX
-        LDA SPOFF,X
+        ; Here we move the sprite in the bar. This is a good place cause the
+        ; sprite has just been drawn so we don't risk to tear it horizontally
+        
+        AND #%00011111  ; We use TIMERB % 16 as an index into SPOFF table
+        TAX             ; which contains a sine going from 0 to 32 centered
+        LDA SPOFF,X     ; on 16
         CLC
         ADC #144
-        STA $D000
-
-        LSR $D019       ; Acknoweledge video interrupts
+        STA $D000       ; An we use it as sprite X+144
              
         PLA             ; Restore Y,X,A from the stack
         TAY
