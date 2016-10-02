@@ -248,7 +248,7 @@ BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         LDA SPOFF,X     ; on 16
         CLC
         ADC #144
-        STA $D000       ; An we use it as sprite X+144
+        STA $D000       ; And we use it as sprite X+144
              
         PLA             ; Restore Y,X,A from the stack
         TAY
