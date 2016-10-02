@@ -30,9 +30,10 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
+TSCSTART = $658         ; First char of line 15 ($400+(15*40))
 ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
-TIMERB   = 22           ; Time base, roughly 12 per second (TIMERA/4)
+TSCROLL  = 24           ; Current text pixel scroll 0-8
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -65,7 +66,6 @@ TIMERB   = 22           ; Time base, roughly 12 per second (TIMERA/4)
         LDA #0          ; Ensure we have a zero in a page zero location
         STA ZEROVAL     ; see other §1 comments for usage
         STA TIMERA      ; Initialize time base accumulators
-        STA TIMERB      ;
 
         LDA #$80        ; Sprite 0 pointer to $2000
         STA $07F8
@@ -229,27 +229,52 @@ BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         LSR $D019       ; Acknoweledge video interrupts
         
         ; This is a good time to take care of the time base.
-        ; We increment TIMERA once per frame and TIMERB at a 4th of
-        ; that rate. These serve as time base for animations, scrolls
-        ; and music.
+        ; We increment TIMERA once per frame. This serves as time base for 
+        ; animations, scrolls and music.
 
         INC TIMERA      ; Increment time base
-        LDA TIMERA
-        CLC
-        ROR
-        ROR
-        STA TIMERB      ; Timer B is TIMERA/4
-
+        
         ; Here we move the sprite in the bar. This is a good place cause the
         ; sprite has just been drawn so we don't risk to tear it horizontally
         
-        AND #%00011111  ; We use TIMERB % 16 as an index into SPOFF table
+        LDA TIMERA
+        ROR
+        ROR
+        AND #%00011111  ; We use (TIMERA/4) % 32 as an index into SPOFF table
         TAX             ; which contains a sine going from 0 to 32 centered
         LDA SPOFF,X     ; on 16
         CLC
         ADC #144
         STA $D000       ; And we use it as sprite X+144
-             
+        
+        LDA $D016
+        CLC
+        ADC #7
+        AND #%00000111
+        ORA #%11001000
+        STA $D016
+
+        AND #%00000111        
+        CMP #%00000111
+        BNE SKIPTL
+
+        LDX TSCROLL
+        INC TSCROLL
+        LDY #0
+TLOOP   LDA STEXT,X
+        CMP #0
+        BNE TROLLSK
+        LDA #0
+        STA TSCROLL
+        JMP SKIPTL
+TROLLSK STA TSCSTART,Y        
+        INX
+        INY
+        TYA
+        CMP #40
+        BNE TLOOP
+
+SKIPTL
         PLA             ; Restore Y,X,A from the stack
         TAY
         PLA
@@ -276,6 +301,10 @@ SPOFF   BYTE 16,19,22,25,27,29,31,31
         BYTE 31,31,30,28,26,23,20,17
         BYTE 14,11,08,05,03,01,00,00
         BYTE 00,00,02,04,06,09,12,15
+
+STEXT   TEXT '                                         '
+        TEXT 'THIS IS A TEST SCROLL TEST, NOT MUCH TO SAY FOR NOW'
+        TEXT '                                         @'
 
 ; Spite data
 *=$2000 
