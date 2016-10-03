@@ -34,7 +34,7 @@ ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
 TSCROLL  = 24           ; Current text pixel scroll 0-8
 TSCSTART = 1624         ; First char of line 15 (1024+(15*40))
-
+TSCOLST  = 55896        ; Color RAM for first char of line 15 (55296+(15*40))
 ; * This is the actual beginning of our assembly program.
 *=$C000
 
@@ -79,7 +79,18 @@ TSCSTART = 1624         ; First char of line 15 (1024+(15*40))
         LDA #RASSTART+2 ; the jitter offset lines are not affected by 
         STA $D001       ; shorter raster lines). Also the bar cannot
                         ; be taller than the sprite as the line timing
-                        ; will changes as soon as out of the sprite area.
+                        ; will changes as soon as out of the sprite area
+
+        LDY #0          ; Prepare color RAM for the scroller text with
+SETTCOL TYA             ; colors from the TSCOLST table
+        AND #%00000111  ; Colors don't chamge during the scroll but since
+        TAX             ; the text moves it will give the impression of 
+        LDA SCRCOL,X    ; colors changes.
+        STA TSCOLST,Y
+        INY
+        TYA 
+        CMP #40         ; Stop after 40 chars as we reached the border.
+        BNE SETTCOL
 
         CLI             ; Let interrupts come 
 
@@ -269,7 +280,7 @@ TLOOP   LDA STEXT,X     ; into screen memory (TROLLSK)
         LDA #0          ; in which case we restart from the beginning of the
         STA TSCROLL     ; string
         JMP SKIPTL
-TROLLSK STA TSCSTART,Y  ; Store into screen memory starting from TSCSTART
+TROLLSK STA TSCSTART,Y  ; Store into screen memory starting from TSCSTART        
         INX
         INY
         TYA
@@ -296,6 +307,8 @@ BARCOL  BYTE 00,00,00,06,06,00,06,06,06,06,14
         BYTE 03,03,14,03,14,14,06,14
         BYTE 06,06,06,06,00,06,128
 
+SCRCOL  BYTE 06,06,14,14,14,03,14,14
+
 ; Sprite offsets, this describes an harmonic motion for the piece
 ; at the center of the bar. A linear (constant speed) one could be
 ; done in software but this looks better.
@@ -308,7 +321,9 @@ SPOFF   BYTE 16,19,22,25,27,29,31,31
 ; and exit the screen nicely. The char @ (screen code 0) signals the
 ; end of the string.
 STEXT   TEXT '                                         '
-        TEXT 'THIS IS A TEST SCROLL TEST, NOT MUCH TO SAY FOR NOW'
+        TEXT 'THIS IS A TEST SCROLL TEST, NOT MUCH TO SAY FOR NOW '
+        TEXT 'THOUGH I WILL MAKE THIS A BIT LONGER SO IT IS EASIER TO '
+        TEXT 'SEE WHAT IT REALLY LOOKS LIKE'
         TEXT '                                         @'
 
 ; Spite data
