@@ -30,10 +30,10 @@
 ; * Constants
 ; *
 RASSTART = 59           ; Raster line where the raster interrupt starts
-TSCSTART = $658         ; First char of line 15 ($400+(15*40))
 ZEROVAL  = 20           ; Zero page location set always to zero see §1 comments
 TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
 TSCROLL  = 24           ; Current text pixel scroll 0-8
+TSCSTART = 1624         ; First char of line 15 (1024+(15*40))
 
 ; * This is the actual beginning of our assembly program.
 *=$C000
@@ -247,31 +247,33 @@ BLEND   LDA #RASSTART   ; Set raster interrupt to the start of the bar
         ADC #144
         STA $D000       ; And we use it as sprite X+144
         
-        LDA $D016
-        CLC
-        ADC #7
-        AND #%00000111
+        ; We now prepare the scroller text
+
+        LDA $D016       ; We decrease here the XSCROLL so at every frame we
+        CLC             ; smoothly scroll one pixel to the left.
+        ADC #7          ; As it stands now this will affect all the screen
+        AND #%00000111  ; below the rasterbar.
         ORA #%11001000
         STA $D016
 
-        AND #%00000111        
-        CMP #%00000111
-        BNE SKIPTL
+        AND #%00000111  ; Unless we scrolled all the way through the 8 pixels     
+        CMP #%00000111  ; skip the next block which shifts the text one whole
+        BNE SKIPTL      ; char left
 
-        LDX TSCROLL
-        INC TSCROLL
-        LDY #0
-TLOOP   LDA STEXT,X
-        CMP #0
-        BNE TROLLSK
-        LDA #0
-        STA TSCROLL
+        LDX TSCROLL     ; TSCROLL holds the current scroll position in chars
+        INC TSCROLL     ; scroll left by one char
+        LDY #0          ; Copy the string starting from the TSCROLL offset
+TLOOP   LDA STEXT,X     ; into screen memory (TROLLSK)
+        CMP #0          ; Unless it's a zero (@)
+        BNE TROLLSK     ;
+        LDA #0          ; in which case we restart from the beginning of the
+        STA TSCROLL     ; string
         JMP SKIPTL
-TROLLSK STA TSCSTART,Y        
+TROLLSK STA TSCSTART,Y  ; Store into screen memory starting from TSCSTART
         INX
         INY
         TYA
-        CMP #40
+        CMP #40         ; Stop after copying 40 chars as we reach the border
         BNE TLOOP
 
 SKIPTL
@@ -302,6 +304,9 @@ SPOFF   BYTE 16,19,22,25,27,29,31,31
         BYTE 14,11,08,05,03,01,00,00
         BYTE 00,00,02,04,06,09,12,15
 
+; Scroller text. We have 40 lead and tail spaces so things enter
+; and exit the screen nicely. The char @ (screen code 0) signals the
+; end of the string.
 STEXT   TEXT '                                         '
         TEXT 'THIS IS A TEST SCROLL TEST, NOT MUCH TO SAY FOR NOW'
         TEXT '                                         @'
