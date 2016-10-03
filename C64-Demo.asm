@@ -35,10 +35,11 @@ TIMERA   = 21           ; Time base, roughly 1 per frame (50Hz)
 TSCROLL  = 24           ; Current text pixel scroll 0-8
 TSCSTART = 1624         ; First char of line 15 (1024+(15*40))
 TSCOLST  = 55896        ; Color RAM for first char of line 15 (55296+(15*40))
+
 ; * This is the actual beginning of our assembly program.
 *=$C000
 
-        SEI             ; Prevent interrupts while we set things up
+START   SEI             ; Prevent interrupts while we set things up
         JSR $FF81       ; Reset VIC, clear screen
 
         LDA #%00110101  ; Disable kernal and BASIC ROMs
@@ -312,7 +313,7 @@ BARCOL  BYTE 00,00,00,06,06,00,06,06,06,06,14
         BYTE 03,03,14,03,14,14,06,14
         BYTE 06,06,06,06,00,06,128
 
-SCRCOL  BYTE 06,06,14,14,14,03,14,14
+SCRCOL  BYTE 01,01,03,03,01,01,03,03
 
 ; Sprite offsets, this describes an harmonic motion for the piece
 ; at the center of the bar. A linear (constant speed) one could be
@@ -332,7 +333,7 @@ STEXT   TEXT '                                         '
         TEXT '                                         @'
 
 *=$3000
-        BYTE    $3C,$66,$6E,$6E,$60,$6C,$36,$00
+FONT0   BYTE    $3C,$66,$6E,$6E,$60,$6C,$36,$00
         BYTE    $00,$00,$3C,$67,$66,$66,$3B,$00
         BYTE    $58,$60,$6C,$76,$66,$66,$DC,$00
         BYTE    $00,$1C,$36,$60,$60,$62,$3C,$00
@@ -393,202 +394,7 @@ STEXT   TEXT '                                         '
         BYTE    $00,$00,$18,$00,$00,$18,$00,$00
         BYTE    $00,$00,$18,$00,$00,$18,$18,$30
         BYTE    $0E,$18,$30,$60,$30,$18,$0E,$00
-        BYTE    $00,$00,$7E,$00,$7E,$00,$00,$00
-        BYTE    $70,$18,$0C,$06,$0C,$18,$70,$00
-        BYTE    $3C,$66,$66,$0C,$18,$00,$18,$00
-        BYTE    $00,$00,$00,$FF,$FF,$00,$00,$00
-        BYTE    $63,$B6,$36,$36,$66,$6B,$30,$00
-        BYTE    $6C,$B6,$36,$3C,$36,$36,$6C,$00
-        BYTE    $36,$68,$68,$68,$68,$66,$3C,$00
-        BYTE    $7C,$B6,$33,$33,$63,$76,$DC,$00
-        BYTE    $36,$68,$68,$6E,$68,$66,$3C,$00
-        BYTE    $77,$DC,$18,$1E,$CC,$6C,$38,$00
-        BYTE    $7B,$D6,$D6,$DF,$D3,$63,$3E,$00
-        BYTE    $36,$3C,$60,$6E,$33,$B3,$E6,$1C
-        BYTE    $76,$DC,$0C,$0C,$0C,$EC,$38,$00
-        BYTE    $76,$DC,$0C,$0C,$0C,$6C,$6C,$38
-        BYTE    $3E,$63,$7C,$64,$3E,$36,$E3,$00
-        BYTE    $3E,$63,$66,$33,$30,$7B,$CE,$00
-        BYTE    $DA,$FF,$6B,$6B,$6B,$6A,$DB,$00
-        BYTE    $6E,$B3,$33,$36,$36,$36,$E3,$00
-        BYTE    $7C,$C6,$C6,$66,$66,$66,$DC,$00
-        BYTE    $6C,$B6,$B3,$B6,$33,$7E,$30,$30
-        BYTE    $7C,$C6,$C6,$66,$66,$6F,$DD,$00
-        BYTE    $6E,$B3,$B3,$3E,$36,$36,$E3,$00
-        BYTE    $7B,$CE,$C0,$D6,$DB,$C3,$7E,$00
-        BYTE    $7B,$DE,$58,$0C,$0C,$79,$DE,$00
-        BYTE    $EE,$66,$66,$66,$66,$66,$BB,$00
-        BYTE    $66,$B6,$B3,$B6,$33,$33,$CE,$00
-        BYTE    $DB,$6A,$6B,$6B,$6B,$FF,$B6,$00
-        BYTE    $76,$DB,$18,$7E,$18,$DB,$6E,$00
-        BYTE    $6E,$DB,$5B,$1B,$33,$1B,$43,$3E
-        BYTE    $3E,$43,$13,$1E,$13,$03,$66,$DC
-        BYTE    $18,$18,$18,$FF,$FF,$18,$18,$18
-        BYTE    $C0,$C0,$30,$30,$C0,$C0,$30,$30
-        BYTE    $18,$18,$18,$18,$18,$18,$18,$18
-        BYTE    $33,$33,$CC,$CC,$33,$33,$CC,$CC
-        BYTE    $33,$99,$CC,$66,$33,$99,$CC,$66
-        BYTE    $00,$00,$00,$00,$00,$00,$00,$00
-        BYTE    $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
-        BYTE    $00,$00,$00,$00,$FF,$FF,$FF,$FF
-        BYTE    $FF,$00,$00,$00,$00,$00,$00,$00
-        BYTE    $00,$00,$00,$00,$00,$00,$00,$FF
-        BYTE    $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
-        BYTE    $CC,$CC,$33,$33,$CC,$CC,$33,$33
-        BYTE    $03,$03,$03,$03,$03,$03,$03,$03
-        BYTE    $00,$00,$00,$00,$CC,$CC,$33,$33
-        BYTE    $CC,$99,$33,$66,$CC,$99,$33,$66
-        BYTE    $03,$03,$03,$03,$03,$03,$03,$03
-        BYTE    $18,$18,$18,$1F,$1F,$18,$18,$18
-        BYTE    $00,$00,$00,$00,$0F,$0F,$0F,$0F
-        BYTE    $18,$18,$18,$1F,$1F,$00,$00,$00
-        BYTE    $00,$00,$00,$F8,$F8,$18,$18,$18
-        BYTE    $00,$00,$00,$00,$00,$00,$FF,$FF
-        BYTE    $00,$00,$00,$1F,$1F,$18,$18,$18
-        BYTE    $18,$18,$18,$FF,$FF,$00,$00,$00
-        BYTE    $00,$00,$00,$FF,$FF,$18,$18,$18
-        BYTE    $18,$18,$18,$F8,$F8,$18,$18,$18
-        BYTE    $C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
-        BYTE    $E0,$E0,$E0,$E0,$E0,$E0,$E0,$E0
-        BYTE    $07,$07,$07,$07,$07,$07,$07,$07
-        BYTE    $FF,$FF,$00,$00,$00,$00,$00,$00
-        BYTE    $FF,$FF,$FF,$00,$00,$00,$00,$00
-        BYTE    $00,$00,$00,$00,$00,$FF,$FF,$FF
-        BYTE    $01,$03,$06,$6C,$78,$70,$60,$00
-        BYTE    $00,$00,$00,$00,$F0,$F0,$F0,$F0
-        BYTE    $0F,$0F,$0F,$0F,$00,$00,$00,$00
-        BYTE    $18,$18,$18,$F8,$F8,$00,$00,$00
-        BYTE    $F0,$F0,$F0,$F0,$00,$00,$00,$00
-        BYTE    $F0,$F0,$F0,$F0,$0F,$0F,$0F,$0F
-        BYTE    $C3,$99,$91,$91,$9F,$93,$C9,$FF
-        BYTE    $FF,$FF,$C3,$98,$99,$99,$C4,$FF
-        BYTE    $A7,$9F,$93,$89,$99,$99,$23,$FF
-        BYTE    $FF,$E3,$C9,$9F,$9F,$9D,$C3,$FF
-        BYTE    $E7,$E3,$F1,$C9,$99,$99,$C3,$FF
-        BYTE    $FF,$C3,$99,$93,$87,$9D,$C3,$FF
-        BYTE    $F3,$EF,$E7,$C3,$E7,$E7,$E7,$EF
-        BYTE    $FF,$C3,$98,$99,$99,$C3,$B9,$83
-        BYTE    $A7,$9F,$93,$89,$99,$99,$93,$F3
-        BYTE    $FF,$E7,$FF,$C7,$E7,$E5,$E3,$FF
-        BYTE    $FF,$E7,$FF,$C7,$E7,$E7,$E7,$CB
-        BYTE    $A3,$CF,$83,$CF,$CF,$8B,$E7,$FF
-        BYTE    $D3,$E7,$E7,$E7,$E7,$C7,$F3,$FF
-        BYTE    $FF,$FF,$25,$80,$94,$94,$94,$FF
-        BYTE    $FF,$FF,$31,$88,$99,$99,$88,$FF
-        BYTE    $FF,$FF,$83,$99,$99,$19,$C7,$FF
-        BYTE    $FF,$3F,$A3,$99,$19,$83,$9F,$9F
-        BYTE    $FF,$FF,$C3,$98,$99,$C1,$F9,$F9
-        BYTE    $FF,$FF,$93,$CB,$CF,$8F,$E7,$FF
-        BYTE    $F3,$EF,$C7,$E7,$E7,$E7,$E7,$EF
-        BYTE    $F7,$E7,$C3,$E7,$E7,$C7,$F3,$FF
-        BYTE    $FF,$BB,$11,$99,$99,$19,$C4,$FF
-        BYTE    $7F,$33,$89,$99,$99,$13,$C7,$FF
-        BYTE    $FF,$75,$20,$94,$94,$94,$89,$FF
-        BYTE    $FF,$C9,$E5,$E7,$C7,$93,$9F,$C3
-        BYTE    $7F,$33,$89,$99,$99,$93,$F3,$F3
-        BYTE    $FF,$C3,$B9,$E3,$F0,$C9,$C9,$E3
-        BYTE    $C3,$CF,$CF,$CF,$CF,$CF,$C3,$FF
-        BYTE    $F3,$ED,$CF,$83,$CF,$9D,$03,$FF
-        BYTE    $C3,$F3,$F3,$F3,$F3,$F3,$C3,$FF
-        BYTE    $FF,$E7,$C3,$81,$E7,$E7,$E7,$E7
-        BYTE    $FF,$EF,$CF,$80,$80,$CF,$EF,$FF
-        BYTE    $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        BYTE    $E7,$E7,$E7,$E7,$FF,$FF,$E7,$FF
-        BYTE    $C9,$C9,$93,$FF,$FF,$FF,$FF,$FF
-        BYTE    $99,$99,$00,$99,$00,$99,$99,$FF
-        BYTE    $F9,$C1,$9F,$C1,$FC,$89,$23,$FF
-        BYTE    $9D,$99,$F3,$E7,$CF,$99,$B9,$FF
-        BYTE    $C3,$99,$C3,$C7,$98,$99,$C0,$FF
-        BYTE    $F3,$F3,$E7,$FF,$FF,$FF,$FF,$FF
-        BYTE    $F3,$E7,$CF,$CF,$CF,$E7,$F3,$FF
-        BYTE    $CF,$E7,$F3,$F3,$F3,$E7,$CF,$FF
-        BYTE    $FF,$99,$C3,$00,$C3,$99,$FF,$FF
-        BYTE    $FF,$E7,$E7,$81,$E7,$E7,$FF,$FF
-        BYTE    $FF,$FF,$FF,$FF,$FF,$E7,$E7,$CF
-        BYTE    $FF,$FF,$FF,$81,$FF,$FF,$FF,$FF
-        BYTE    $FF,$FF,$FF,$FF,$FF,$E7,$E7,$FF
-        BYTE    $FF,$FC,$F9,$F3,$E7,$CF,$9F,$FF
-        BYTE    $E7,$C9,$99,$99,$99,$93,$E7,$FF
-        BYTE    $E7,$E7,$C7,$E7,$E7,$E7,$C3,$FF
-        BYTE    $C3,$99,$99,$C3,$E7,$CD,$81,$FF
-        BYTE    $81,$99,$F3,$E7,$B9,$99,$C3,$FF
-        BYTE    $F3,$E5,$C9,$99,$80,$F9,$F0,$FF
-        BYTE    $89,$A3,$BF,$83,$F9,$99,$C3,$FF
-        BYTE    $E3,$C9,$9F,$83,$99,$93,$C7,$FF
-        BYTE    $89,$A1,$F9,$F3,$E7,$CF,$9F,$FF
-        BYTE    $E3,$C9,$99,$C3,$99,$93,$C7,$FF
-        BYTE    $E3,$C9,$99,$C1,$F9,$93,$C7,$FF
-        BYTE    $FF,$FF,$E7,$FF,$FF,$E7,$FF,$FF
-        BYTE    $FF,$FF,$E7,$FF,$FF,$E7,$E7,$CF
-        BYTE    $F1,$E7,$CF,$9F,$CF,$E7,$F1,$FF
-        BYTE    $FF,$FF,$81,$FF,$81,$FF,$FF,$FF
-        BYTE    $8F,$E7,$F3,$F9,$F3,$E7,$8F,$FF
-        BYTE    $C3,$99,$99,$F3,$E7,$FF,$E7,$FF
-        BYTE    $FF,$FF,$FF,$00,$00,$FF,$FF,$FF
-        BYTE    $9C,$49,$C9,$C9,$99,$94,$CF,$FF
-        BYTE    $93,$49,$C9,$C3,$C9,$C9,$93,$FF
-        BYTE    $C9,$97,$97,$97,$97,$99,$C3,$FF
-        BYTE    $83,$49,$CC,$CC,$9C,$89,$23,$FF
-        BYTE    $C9,$97,$97,$91,$97,$99,$C3,$FF
-        BYTE    $88,$23,$E7,$E1,$33,$93,$C7,$FF
-        BYTE    $84,$29,$29,$20,$2C,$9C,$C1,$FF
-        BYTE    $C9,$C3,$9F,$91,$CC,$4C,$19,$E3
-        BYTE    $89,$23,$F3,$F3,$F3,$13,$C7,$FF
-        BYTE    $89,$23,$F3,$F3,$F3,$93,$93,$C7
-        BYTE    $C1,$9C,$83,$9B,$C1,$C9,$1C,$FF
-        BYTE    $C1,$9C,$99,$CC,$CF,$84,$31,$FF
-        BYTE    $25,$00,$94,$94,$94,$95,$24,$FF
-        BYTE    $91,$4C,$CC,$C9,$C9,$C9,$1C,$FF
-        BYTE    $83,$39,$39,$99,$99,$99,$23,$FF
-        BYTE    $93,$49,$4C,$49,$CC,$81,$CF,$CF
-        BYTE    $83,$39,$39,$99,$99,$90,$22,$FF
-        BYTE    $91,$4C,$4C,$C1,$C9,$C9,$1C,$FF
-        BYTE    $84,$31,$3F,$29,$24,$3C,$81,$FF
-        BYTE    $84,$21,$A7,$F3,$F3,$86,$21,$FF
-        BYTE    $11,$99,$99,$99,$99,$99,$44,$FF
-        BYTE    $99,$49,$4C,$49,$CC,$CC,$31,$FF
-        BYTE    $24,$95,$94,$94,$94,$00,$49,$FF
-        BYTE    $89,$24,$E7,$81,$E7,$24,$91,$FF
-        BYTE    $91,$24,$A4,$E4,$CC,$E4,$BC,$C1
-        BYTE    $C1,$BC,$EC,$E1,$EC,$FC,$99,$23
-        BYTE    $E7,$E7,$E7,$00,$00,$E7,$E7,$E7
-        BYTE    $3F,$3F,$CF,$CF,$3F,$3F,$CF,$CF
-        BYTE    $E7,$E7,$E7,$E7,$E7,$E7,$E7,$E7
-        BYTE    $CC,$CC,$33,$33,$CC,$CC,$33,$33
-        BYTE    $CC,$66,$33,$99,$CC,$66,$33,$99
-        BYTE    $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        BYTE    $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
-        BYTE    $FF,$FF,$FF,$FF,$00,$00,$00,$00
-        BYTE    $00,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        BYTE    $FF,$FF,$FF,$FF,$FF,$FF,$FF,$00
-        BYTE    $3F,$3F,$3F,$3F,$3F,$3F,$3F,$3F
-        BYTE    $33,$33,$CC,$CC,$33,$33,$CC,$CC
-        BYTE    $FC,$FC,$FC,$FC,$FC,$FC,$FC,$FC
-        BYTE    $FF,$FF,$FF,$FF,$33,$33,$CC,$CC
-        BYTE    $33,$66,$CC,$99,$33,$66,$CC,$99
-        BYTE    $FC,$FC,$FC,$FC,$FC,$FC,$FC,$FC
-        BYTE    $E7,$E7,$E7,$E0,$E0,$E7,$E7,$E7
-        BYTE    $FF,$FF,$FF,$FF,$F0,$F0,$F0,$F0
-        BYTE    $E7,$E7,$E7,$E0,$E0,$FF,$FF,$FF
-        BYTE    $FF,$FF,$FF,$07,$07,$E7,$E7,$E7
-        BYTE    $FF,$FF,$FF,$FF,$FF,$FF,$00,$00
-        BYTE    $FF,$FF,$FF,$E0,$E0,$E7,$E7,$E7
-        BYTE    $E7,$E7,$E7,$00,$00,$FF,$FF,$FF
-        BYTE    $FF,$FF,$FF,$00,$00,$E7,$E7,$E7
-        BYTE    $E7,$E7,$E7,$07,$07,$E7,$E7,$E7
-        BYTE    $3F,$3F,$3F,$3F,$3F,$3F,$3F,$3F
-        BYTE    $1F,$1F,$1F,$1F,$1F,$1F,$1F,$1F
-        BYTE    $F8,$F8,$F8,$F8,$F8,$F8,$F8,$F8
-        BYTE    $00,$00,$FF,$FF,$FF,$FF,$FF,$FF
-        BYTE    $00,$00,$00,$FF,$FF,$FF,$FF,$FF
-        BYTE    $FF,$FF,$FF,$FF,$FF,$00,$00,$00
-        BYTE    $FE,$FC,$F9,$93,$87,$8F,$9F,$FF
-        BYTE    $FF,$FF,$FF,$FF,$0F,$0F,$0F,$0F
-        BYTE    $F0,$F0,$F0,$F0,$FF,$FF,$FF,$FF
-        BYTE    $E7,$E7,$E7,$07,$07,$FF,$FF,$FF
-        BYTE    $0F,$0F,$0F,$0F,$FF,$FF,$FF,$FF
-        BYTE    $0F,$0F,$0F,$0F,$F0,$F0,$F0,$F0
-
+        
 ; Spite data
 *=$2000 
 SPRITE0 BYTE $00,$7F,$00,$01,$FF,$C0,$03,$FF
