@@ -67,7 +67,7 @@
             <IncludeInBuild>True</IncludeInBuild>
             <Regions />
             <Breakpoints />
-            <Bookmarks>100,</Bookmarks>
+            <Bookmarks />
             <Topmost>True</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
