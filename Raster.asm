@@ -18,10 +18,10 @@
 ; *                                                                           *
 ; *****************************************************************************
 
-        ; THIS IS THE FIRST RASTER INTERRUPT SERVICE ROUTINE.
-        ; BY THE TIME WE COME HERE WE CAN BE ANYWHERE ON THE
-        ; DESIRED LINE WITH A JITTER OF 7 CYCLES DEPENDING ON
-        ; THE INSTRUCTION EXECUTING WHEN THE INTERRUPT APPENED.
+                        ; THIS IS THE FIRST RASTER INTERRUPT SERVICE ROUTINE.
+                        ; BY THE TIME WE COME HERE WE CAN BE ANYWHERE ON THE
+                        ; DESIRED LINE WITH A JITTER OF 7 CYCLES DEPENDING ON
+                        ; THE INSTRUCTION EXECUTING WHEN THE INTERRUPT APPENED.
 
 *=$C400
 
@@ -65,13 +65,13 @@ ISR     PHA             ; PRESERVE A,X,Y ON THE STACK
         NOP             ; BEFORE AND BY RESETTING THE STACK POINTER RTI WILL NOT
         NOP             ; RETURN HERE EITHER.
 
-        ; THIS IS THE SECOND RASTER INTERRUPT ROUTINE. BY THE TIME
-        ; WE COME HERE WE HAVE A JITTER OF JUST ONE CYCLE AS WE ENSURED
-        ; THIS INTERRUPT HAPPENS WHILE EXECUTING NOPS (2 CYCLES).
-        ; NEXT WE ENSURE WE SPEND THE EXACT AMOUNT OF CYCLES IT TAKES
-        ; TO DRAW A FULL SCAN LINE. THE LAST BEQ *+2 WE USE DOES THE
-        ; SYNC MAGIC. SEE COMMENTS BELOW. THIS IS TIMED FOR PAL SYSTEMS
-        ; THE DELAY LOOP NEEDS TO BE CHANGED FOR NTSC.
+                        ; THIS IS THE SECOND RASTER INTERRUPT ROUTINE. BY THE TIME
+                        ; WE COME HERE WE HAVE A JITTER OF JUST ONE CYCLE AS WE ENSURED
+                        ; THIS INTERRUPT HAPPENS WHILE EXECUTING NOPS (2 CYCLES).
+                        ; NEXT WE ENSURE WE SPEND THE EXACT AMOUNT OF CYCLES IT TAKES
+                        ; TO DRAW A FULL SCAN LINE. THE LAST BEQ *+2 WE USE DOES THE
+                        ; SYNC MAGIC. SEE COMMENTS BELOW. THIS IS TIMED FOR PAL SYSTEMS
+                        ; THE DELAY LOOP NEEDS TO BE CHANGED FOR NTSC.
 
                         ; INTERRUPT SERVICING (DURING A NOP)          2/3 CYCLES
 ISR2    TXS             ; RESTORE THE SP MESSED BY THE INTERRUPT.       2 CYCLES
@@ -149,16 +149,16 @@ BLEND   LDA  #RASSTART  ; SET RASTER INTERRUPT TO THE START OF THE BAR
 
         LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS
 
-        JSR  MUPLAY     ; Advance the tracker by one tick.
+        JSR  MUPLAY     ; ADVANCE THE TRACKER BY ONE TICK.
 
-        ; THIS IS A GOOD TIME TO TAKE CARE OF THE TIME BASE.
-        ; WE INCREMENT TIMERA ONCE PER FRAME. THIS SERVES AS TIME BASE FOR
-        ; ANIMATIONS AND SCROLLS.
+                        ; THIS IS A GOOD TIME TO TAKE CARE OF THE TIME BASE.
+                        ; WE INCREMENT TIMERA ONCE PER FRAME. THIS SERVES AS TIME BASE FOR
+                        ; ANIMATIONS AND SCROLLS.
 
         INC  TIMERA     ; INCREMENT TIME BASE
 
-        ; HERE WE MOVE THE SPRITE IN THE BAR. THIS IS A GOOD PLACE CAUSE THE
-        ; SPRITE HAS JUST BEEN DRAWN SO WE DON'T RISK TO TEAR IT HORIZONTALLY
+                        ; HERE WE MOVE THE SPRITE IN THE BAR. THIS IS A GOOD PLACE CAUSE THE
+                        ; SPRITE HAS JUST BEEN DRAWN SO WE DON'T RISK TO TEAR IT HORIZONTALLY
 
         LDA  TIMERA
         ROR
@@ -238,67 +238,64 @@ STEXT   TEXT '                                         '
         TEXT '                                         @'
 
 *=$3000
-FONT0   BYTE $3C,$66,$6E,$6E,$60,$6C,$36,$00
-        BYTE $00,$00,$3C,$67,$66,$66,$3B,$00
-        BYTE $58,$60,$6C,$76,$66,$66,$DC,$00
-        BYTE $00,$1C,$36,$60,$60,$62,$3C,$00
-        BYTE $18,$1C,$0E,$36,$66,$66,$3C,$00
-        BYTE $00,$3C,$66,$6C,$78,$62,$3C,$00
-        BYTE $0C,$10,$18,$3C,$18,$18,$18,$10
-        BYTE $00,$3C,$67,$66,$66,$3C,$46,$7C
-        BYTE $58,$60,$6C,$76,$66,$66,$6C,$0C
-        BYTE $00,$18,$00,$38,$18,$1A,$1C,$00
-        BYTE $00,$18,$00,$38,$18,$18,$18,$34
-        BYTE $5C,$30,$7C,$30,$30,$74,$18,$00
-        BYTE $2C,$18,$18,$18,$18,$38,$0C,$00
-        BYTE $00,$00,$DA,$7F,$6B,$6B,$6B,$00
-        BYTE $00,$00,$CE,$77,$66,$66,$77,$00
-        BYTE $00,$00,$7C,$66,$66,$E6,$38,$00
-        BYTE $00,$C0,$5C,$66,$E6,$7C,$60,$60
-        BYTE $00,$00,$3C,$67,$66,$3E,$06,$06
-        BYTE $00,$00,$6C,$34,$30,$70,$18,$00
-        BYTE $0C,$10,$38,$18,$18,$18,$18,$10
-        BYTE $08,$18,$3C,$18,$18,$38,$0C,$00
-        BYTE $00,$44,$EE,$66,$66,$E6,$3B,$00
-        BYTE $80,$CC,$76,$66,$66,$EC,$38,$00
-        BYTE $00,$8A,$DF,$6B,$6B,$6B,$76,$00
-        BYTE $00,$36,$1A,$18,$38,$6C,$60,$3C
-        BYTE $80,$CC,$76,$66,$66,$6C,$0C,$0C
-        BYTE $00,$3C,$46,$1C,$0F,$36,$36,$1C
-        BYTE $3C,$30,$30,$30,$30,$30,$3C,$00
-        BYTE $0C,$12,$30,$7C,$30,$62,$FC,$00
-        BYTE $3C,$0C,$0C,$0C,$0C,$0C,$3C,$00
-        BYTE $00,$18,$3C,$7E,$18,$18,$18,$18
-        BYTE $00,$10,$30,$7F,$7F,$30,$10,$00
+FONT0   BYTE $00,$00,$00,$0C,$3F,$F0,$C0,$00
+        BYTE $7C,$FE,$C6,$C6,$FE,$FE,$C6,$C6
+        BYTE $FC,$FE,$C6,$FC,$C6,$C6,$FE,$FC
+        BYTE $7E,$FE,$C0,$C0,$C0,$C0,$FE,$7E
+        BYTE $FC,$FE,$C6,$C6,$C6,$C6,$FE,$FC
+        BYTE $FE,$FE,$C0,$FC,$FC,$C0,$FE,$FE
+        BYTE $FE,$FE,$C0,$FC,$FC,$C0,$C0,$C0
+        BYTE $7C,$FE,$C0,$C0,$CE,$C6,$FE,$7C
+        BYTE $C6,$C6,$C6,$FE,$FE,$C6,$C6,$C6
+        BYTE $7C,$38,$38,$38,$38,$38,$38,$7C
+        BYTE $FE,$FE,$0C,$0C,$CC,$CC,$FC,$78
+        BYTE $CC,$DC,$F8,$F0,$F8,$DC,$CE,$C6
+        BYTE $C0,$C0,$C0,$C0,$C0,$C0,$FE,$FE
+        BYTE $C6,$EE,$FE,$FE,$D6,$C6,$C6,$C6
+        BYTE $C6,$E6,$F6,$FE,$DE,$CE,$C6,$C6
+        BYTE $7C,$FE,$C6,$C6,$C6,$C6,$FE,$7C
+        BYTE $FC,$FE,$C6,$C6,$FE,$FC,$C0,$C0
+        BYTE $7C,$FE,$C6,$C6,$D6,$CE,$FE,$7C
+        BYTE $FC,$FE,$C6,$C6,$FC,$F8,$DC,$CE
+        BYTE $7E,$FE,$C0,$FC,$7E,$06,$FE,$FC
+        BYTE $FE,$FE,$38,$38,$38,$38,$38,$38
+        BYTE $C6,$C6,$C6,$C6,$C6,$C6,$FE,$7C
+        BYTE $C6,$C6,$C6,$C6,$6C,$6C,$38,$38
+        BYTE $C6,$C6,$C6,$C6,$C6,$D6,$FE,$6C
+        BYTE $C6,$C6,$EE,$7C,$38,$7C,$EE,$C6
+        BYTE $C6,$C6,$6C,$7C,$38,$38,$38,$38
+        BYTE $FE,$FE,$1C,$38,$70,$E0,$FE,$FE
         BYTE $00,$00,$00,$00,$00,$00,$00,$00
-        BYTE $18,$18,$18,$18,$00,$00,$18,$00
-        BYTE $36,$36,$6C,$00,$00,$00,$00,$00
-        BYTE $66,$66,$FF,$66,$FF,$66,$66,$00
-        BYTE $06,$3E,$60,$3E,$03,$76,$DC,$00
-        BYTE $62,$66,$0C,$18,$30,$66,$46,$00
-        BYTE $3C,$66,$3C,$38,$67,$66,$3F,$00
-        BYTE $0C,$0C,$18,$00,$00,$00,$00,$00
-        BYTE $0C,$18,$30,$30,$30,$18,$0C,$00
-        BYTE $30,$18,$0C,$0C,$0C,$18,$30,$00
-        BYTE $00,$66,$3C,$FF,$3C,$66,$00,$00
-        BYTE $00,$18,$18,$7E,$18,$18,$00,$00
-        BYTE $00,$00,$00,$00,$00,$18,$18,$30
-        BYTE $00,$00,$00,$7E,$00,$00,$00,$00
-        BYTE $00,$00,$00,$00,$00,$18,$18,$00
-        BYTE $00,$03,$06,$0C,$18,$30,$60,$00
-        BYTE $18,$36,$66,$66,$66,$6C,$18,$00
-        BYTE $18,$18,$38,$18,$18,$18,$3C,$00
-        BYTE $3C,$66,$66,$3C,$18,$32,$7E,$00
-        BYTE $7E,$66,$0C,$18,$46,$66,$3C,$00
-        BYTE $0C,$1A,$36,$66,$7F,$06,$0F,$00
-        BYTE $76,$5C,$40,$7C,$06,$66,$3C,$00
-        BYTE $1C,$36,$60,$7C,$66,$6C,$38,$00
-        BYTE $76,$5E,$06,$0C,$18,$30,$60,$00
-        BYTE $1C,$36,$66,$3C,$66,$6C,$38,$00
-        BYTE $1C,$36,$66,$3E,$06,$6C,$38,$00
-        BYTE $00,$00,$18,$00,$00,$18,$00,$00
-        BYTE $00,$00,$18,$00,$00,$18,$18,$30
-        BYTE $0E,$18,$30,$60,$30,$18,$0E,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $00,$00,$00,$00,$00,$00,$00,$00
+        BYTE $7C,$FE,$C6,$C6,$C6,$C6,$FE,$7C
+        BYTE $38,$78,$38,$38,$38,$38,$38,$7C
+        BYTE $7C,$FE,$C6,$06,$7C,$C0,$FE,$FE
+        BYTE $FE,$FE,$1C,$38,$1C,$C6,$FE,$7C
+        BYTE $1C,$3C,$6C,$CC,$FE,$FE,$0C,$0C
+        BYTE $FE,$FE,$C0,$FC,$06,$C6,$FE,$7C
+        BYTE $7C,$FE,$C0,$FC,$C6,$C6,$FE,$7C
+        BYTE $FE,$FE,$0C,$0C,$18,$18,$30,$30
+        BYTE $7C,$C6,$C6,$7C,$C6,$C6,$FE,$7C
+        BYTE $7C,$FE,$C6,$C6,$7E,$06,$FE,$7C
 
 ; SPITE DATA
 *=$2000
