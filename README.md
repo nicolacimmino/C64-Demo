@@ -2,4 +2,4 @@
 
 Current status:
 
-![Current](images/02 - Screenshot.png)
+![Current](images/02%20-%20Screenshot.png)
