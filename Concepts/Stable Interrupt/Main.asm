@@ -138,11 +138,8 @@ ISR2    TXS             ; RESTORE THE SP MESSED BY THE INTERRUPT.       2 CYCLES
         STA  $D020      ; SO WE SHOW WHERE OUR CODE IS RUN ON THE SCREEN.
         STA  $D021      ; 
 
-        NOP             ; JUST WAIT A WHILE TO MAKE THE BAR LONGER.
-        NOP             ;
-        NOP             ;
-        NOP             ;
-    
+        LDA  ($04,X)    ; JUST WAIT 6 CYCLES TO MAKE THE BAR LONGER.
+        
         LDA  #6         ; RESTORE BORDER AND BACKGROUND COLORS.
         STA  $D021      ;
         LDA  #14        ;
