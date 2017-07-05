@@ -42,18 +42,18 @@ START   SEI             ; PREVENT INTERRUPTS WHILE WE SET THINGS UP.
         LDA  #%00110101 ; DISABLE KERNAL AND BASIC ROMS WE GO BARE METAL.
         STA  $01        ; 
 
-        LDA  #%01111111 ; DISABLE CIA-1/2 INTERRUPTS
+        LDA  #%01111111 ; DISABLE CIA-1/2 INTERRUPTS.
         STA  $DC0D      ;
         STA  $DD0D      ;
       
-        JSR  ISRSET     ; SETUP ISR AS RASTER INTERRUPT SERVICE ROUTINE
+        JSR  ISRSET     ; SETUP ISR AS RASTER INTERRUPT SERVICE ROUTINE.
 
-        LDA  #%00000001 ; ENABLE RASTER INTERRUPT
+        LDA  #%00000001 ; ENABLE RASTER INTERRUPT.
         STA  $D01A      ;
 
-        LDA  $DC0D      ; ACKNOWLEDGE CIA INTERRUPTS
+        LDA  $DC0D      ; ACKNOWLEDGE CIA INTERRUPTS.
         
-        CLI             ; LET INTERRUPTS COME
+        CLI             ; LET INTERRUPTS COME.
 
         ; THIS IS OUR MAIN LOOP. NOTHING  USEFUL, JUST A MIX OF DIFFERENT LENGTH 
         ; INSTRUCTIONS SO  WE MAXIMISE THE RASTER  INTERRUPT JITTER  TO SIMULATE
@@ -74,7 +74,7 @@ LOOP    LDA  #1         ; 2 CYCLES
 ; * HERE WE  CAN BE  ANYWHERE ON  THE  DESIRED LINE WITH A JITTER OF 7 CYCLES * 
 ; * DEPENDING  ON THE  INSTRUCTION EXECUTING  WHEN THE INTERRUPT HAPPENED.    *
 
-ISR     PHA             ; PRESERVE A,X,Y ON THE STACK
+ISR     PHA             ; PRESERVE A,X,Y ON THE STACK.
         TXA             ;
         PHA             ;
         TYA             ;
@@ -147,7 +147,7 @@ ISR2    TXS             ; RESTORE THE SP MESSED BY THE INTERRUPT.       2 CYCLES
       
         JSR ISRSET      ; SET RASTER INTERRUPT FOR THE NEXT SCREEN.
 
-        PLA             ; RESTORE Y,X,A FROM THE STACK
+        PLA             ; RESTORE Y,X,A FROM THE STACK.
         TAY             ;
         PLA             ;
         TAX             ;
@@ -158,20 +158,20 @@ ISR2    TXS             ; RESTORE THE SP MESSED BY THE INTERRUPT.       2 CYCLES
 ; *****************************************************************************
 
 ; *****************************************************************************
-; * SETUP A RASTER INTERRUPT TO BE SERVICED ON LINE 91 BY ISR                 *
+; * SETUP A RASTER INTERRUPT TO BE SERVICED ON LINE 91 BY ISR.                 *
 
-ISRSET  LDA  #91        ; SET RASTER INTERRUPT FOR LINE 91
+ISRSET  LDA  #91        ; SET RASTER INTERRUPT FOR LINE 91.
         STA  $D012
         LDA  #%01111111 ; CLEAR RST8 BIT, THE INTERRUPT LINE IS
-        AND  $D011      ; ABOVE RASTER LINE 255
+        AND  $D011      ; ABOVE RASTER LINE 255.
         STA  $D011
        
         LDA  #<ISR      ; SET THE INTERRUPT VECTOR BACK TO THE FIRST ISR
-        STA  $FFFE      ; (THE RASTER SYNC ONE)
+        STA  $FFFE      ; (THE RASTER SYNC ONE).
         LDA  #>ISR
         STA  $FFFF
 
-        LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS
+        LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
 
         RTS
 ; *                                                                           *
