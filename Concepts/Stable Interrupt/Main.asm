@@ -19,14 +19,13 @@
 ; *****************************************************************************
 
 ; *****************************************************************************
-; * BELOW ARE TBE BASIC TOKENS FOR 10 SYS (49152)                             *
+; * BELOW ARE TBE BASIC TOKENS FOR 10 SYS49152                                *
 ; * WE STORE THEM AT THE BEGINNING OF THE BASIC RAM SO WHEN WE CAN LOAD       *
 ; * THE PROGRAM WITH AUTORUN (LOAD "*",8,1) AND SAVE TO TYPE THE SYS.         *
 
 *=$801
 
-        BYTE $0E, $08, $0A, $00, $9E, $20, $28, $34, $39, $31, $35, $32
-        BYTE $29, $00, $00, $00
+        BYTE $0E, $08, $0A, $00, $9E, $34, $39, $31, $35, $32, $00, $00, $00
 ; *                                                                           *
 ; *****************************************************************************
 
@@ -160,7 +159,9 @@ ISR2    TXS             ; RESTORE THE SP MESSED BY THE INTERRUPT.       2 CYCLES
 ; *****************************************************************************
 ; * SETUP A RASTER INTERRUPT TO BE SERVICED ON LINE 91 BY ISR.                 *
 
-ISRSET  LDA  #91        ; SET RASTER INTERRUPT FOR LINE 91.
+ISRSET  PHA             ; Preserve A so we can restore it before returning.
+
+        LDA  #91        ; SET RASTER INTERRUPT FOR LINE 91.
         STA  $D012
         LDA  #%01111111 ; CLEAR RST8 BIT, THE INTERRUPT LINE IS
         AND  $D011      ; ABOVE RASTER LINE 255.
@@ -172,6 +173,8 @@ ISRSET  LDA  #91        ; SET RASTER INTERRUPT FOR LINE 91.
         STA  $FFFF
 
         LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
+
+        PLA             ; Restore A as it was before the call.
 
         RTS
 ; *                                                                           *
