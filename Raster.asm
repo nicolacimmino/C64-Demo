@@ -172,6 +172,12 @@ BLEND   LDA  #RASSTART  ; SET RASTER INTERRUPT TO THE START OF THE BAR
         ADC  #144
         STA  $D000      ; AND WE USE IT AS SPRITE X+144
 
+        LDA  TIMERA     ; WE USER TIMERA/32 TO CHANGE THE LAMP SPRITE FROM AN ON
+        AND  #%00010000 ; LAMP (YELLOW) TO OFF (BLACK)
+        BEQ  SPBLK
+        LDA  #$07
+SPBLK   STA  $D026
+
                         ; WE NOW PREPARE THE SCROLLER TEXT
 
         LDA  $D016      ; WE DECREASE HERE THE XSCROLL SO AT EVERY FRAME WE
@@ -301,11 +307,24 @@ FONT0   BYTE $00,$00,$00,$0C,$3F,$F0,$C0,$00
 
 ; SPITE DATA
 *=$2000
-SPRITE0 BYTE $00,$7F,$00,$01,$FF,$C0,$03,$FF
-        BYTE $E0,$03,$E7,$E0,$07,$D9,$F0,$07
-        BYTE $DF,$F0,$07,$D9,$F0,$03,$E7,$E0
-        BYTE $03,$FF,$E0,$03,$FF,$E0,$02,$FF
-        BYTE $A0,$01,$7F,$40,$01,$3E,$40,$00
-        BYTE $9C,$80,$00,$9C,$80,$00,$49,$00
-        BYTE $00,$49,$00,$00,$3E,$00,$00,$3E
-        BYTE $00,$00,$3E,$00,$00,$1C,$00,$00
+;SPRITE0 BYTE $00,$7F,$00,$01,$FF,$C0,$03,$FF
+;        BYTE $E0,$03,$E7,$E0,$07,$D9,$F0,$07
+;        BYTE $DF,$F0,$07,$D9,$F0,$03,$E7,$E0
+;        BYTE $03,$FF,$E0,$03,$FF,$E0,$02,$FF
+;        BYTE $A0,$01,$7F,$40,$01,$3E,$40,$00
+;        BYTE $9C,$80,$00,$9C,$80,$00,$49,$00
+;        BYTE $00,$49,$00,$00,$3E,$00,$00,$3E
+;        BYTE $00,$00,$3E,$00,$00,$1C,$00,$00
+
+ 
+SPRITE0  BYTE $00,$AA,$00,$02,$FF,$80,$02,$FF
+         BYTE $80,$0B,$FF,$E0,$0B,$FF,$E0,$0B
+         BYTE $D7,$E0,$0B,$7D,$E0,$0B,$7D,$E0
+         BYTE $0B,$7D,$E0,$02,$D7,$80,$02,$D7
+         BYTE $80,$02,$D7,$80,$00,$AA,$00,$00
+         BYTE $96,$00,$00,$9A,$00,$00,$A6,$00
+         BYTE $00,$9A,$00,$00,$A6,$00,$00,$9A
+         BYTE $00,$00,$A6,$00,$00,$28,$00,$00
+
+
+

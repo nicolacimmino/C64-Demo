@@ -2,14 +2,15 @@
 <sprites>
   <sprite>
     <description></description>
+    <links></links>
     <include>True</include>
     <multi>False</multi>
     <spbkgnd>1</spbkgnd>
     <spcolour>0</spcolour>
     <mcolour1>6</mcolour1>
     <mcolour2>7</mcolour2>
-    <expandx>False</expandx>
-    <expandy>False</expandy>
+    <expandx>True</expandx>
+    <expandy>True</expandy>
     <sdata>
       <data>32512</data>
       <data>131008</data>
@@ -36,6 +37,7 @@
    </sprite>
   <sprite>
     <description>skull_1</description>
+    <links></links>
     <include>True</include>
     <multi>False</multi>
     <spbkgnd>1</spbkgnd>
@@ -70,6 +72,7 @@
    </sprite>
   <sprite>
     <description>skull_1</description>
+    <links></links>
     <include>True</include>
     <multi>False</multi>
     <spbkgnd>1</spbkgnd>
@@ -104,6 +107,7 @@
    </sprite>
   <sprite>
     <description>skull_1</description>
+    <links></links>
     <include>True</include>
     <multi>False</multi>
     <spbkgnd>1</spbkgnd>
@@ -134,6 +138,41 @@
       <data>453424</data>
       <data>229088</data>
       <data>131008</data>
+    </sdata>
+   </sprite>
+  <sprite>
+    <description></description>
+    <links></links>
+    <include>True</include>
+    <multi>True</multi>
+    <spbkgnd>1</spbkgnd>
+    <spcolour>0</spcolour>
+    <mcolour1>12</mcolour1>
+    <mcolour2>7</mcolour2>
+    <expandx>False</expandx>
+    <expandy>False</expandy>
+    <sdata>
+      <data>43520</data>
+      <data>196480</data>
+      <data>196480</data>
+      <data>786400</data>
+      <data>786400</data>
+      <data>776160</data>
+      <data>753120</data>
+      <data>753120</data>
+      <data>753120</data>
+      <data>186240</data>
+      <data>186240</data>
+      <data>186240</data>
+      <data>43520</data>
+      <data>38400</data>
+      <data>39424</data>
+      <data>42496</data>
+      <data>39424</data>
+      <data>42496</data>
+      <data>39424</data>
+      <data>42496</data>
+      <data>10240</data>
     </sdata>
    </sprite>
     <!-- Scratchpad data -->

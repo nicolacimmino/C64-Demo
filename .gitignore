@@ -2,6 +2,7 @@
 *.dbg
 *.prg
 *.tmp
+*.bak
 Thumbs.db
 /bak/*
 
