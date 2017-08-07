@@ -34,7 +34,9 @@ WAIT_NOTE_OFF WA 1
 This is a pointers table to the beginning of the instrument, two bytes per instrument, little endian.
 
 ```
-IPT BYTE IT0_LO IT0_HI IT1_LO IT1_HI .....
+IPT BYTE IT0_LO IT0_HI 
+    BYTE IT1_LO IT1_HI 
+    .....
 ```
 
 ## Track (TRK) ##
@@ -44,4 +46,5 @@ Each track is made up of one entry per beat. The entry conntains:
 ```
 TRK BYTE BEAT_NUMBER, FREQ_HI, FREQ_LO, INSTR_NUM, DURATION
     BYTE BEAT_NUMBER, FREQ_HI, FREQ_LO, INSTR_NUM, DURATION
+    .....
 ```
