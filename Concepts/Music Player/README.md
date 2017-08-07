@@ -1,9 +1,16 @@
+# Units #
 
-# TICK (T)
+## TICK (T) ##
 
 The smallest time unit, a tick is equivalent to 1 frame interrupt call.
 
-# Instrument Table (IT) #
+## BEAT (BT) ##
+
+One beat is 16 TICKS. 
+
+# Tune Elements #
+
+## Instrument Table (IT) ##
 
 Each instrument is a sequence of commands, each command is made of 2 bytes. The high nibble is the command, the lower nibble the first operand,
 the second byte the second operand.
@@ -22,27 +29,18 @@ WAIT_NOTE_OFF WA 1
 
   0 1 1 NA4-0
 
-# Instruments Pointers Table (IPT) #
+## Instruments Pointers Table (IPT) ##
 
 This is a pointers table to the beginning of the instrument, two bytes per instrument, little endian.
 
-IT0_LO IT0_HI IT1_LO IT1_HI
+```
+IPT BYTE IT0_LO IT0_HI IT1_LO IT1_HI .....
+```
 
-# BEAT (BT) #
-
-One beat is 16 TICKS. 
-
-# TRACK (TRK) #
+## TRACK (TRK) ##
 
 Each track is made up of one entry per beat. The entry conntains:
 
-BEAT_NUMBER
-
-FREQ_HI
-
-FREQ_LO
-
-INSTR_NUM
-
-DURATION
-
+```
+TRK BYTE BEAT_NUMBER, FREQ_HI, FREQ_LO, INSTR_NUM, DURATION
+```
