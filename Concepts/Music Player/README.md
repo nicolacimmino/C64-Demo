@@ -1,10 +1,10 @@
 # Units #
 
-## TICK (T) ##
+## Tick (T) ##
 
 The smallest time unit, a tick is equivalent to 1 frame interrupt call.
 
-## BEAT (BT) ##
+## Beat (BT) ##
 
 One beat is 16 TICKS. 
 
@@ -37,10 +37,11 @@ This is a pointers table to the beginning of the instrument, two bytes per instr
 IPT BYTE IT0_LO IT0_HI IT1_LO IT1_HI .....
 ```
 
-## TRACK (TRK) ##
+## Track (TRK) ##
 
 Each track is made up of one entry per beat. The entry conntains:
 
 ```
 TRK BYTE BEAT_NUMBER, FREQ_HI, FREQ_LO, INSTR_NUM, DURATION
+    BYTE BEAT_NUMBER, FREQ_HI, FREQ_LO, INSTR_NUM, DURATION
 ```
