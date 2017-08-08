@@ -29,6 +29,10 @@ WAIT_NOTE_OFF WA 1
 
   0 1 1 NA4-0
 
+BITSET
+
+BITCLR
+
 ## Instruments Pointers Table (IPT) ##
 
 This is a pointers table to the beginning of the instrument, two bytes per instrument, little endian.
