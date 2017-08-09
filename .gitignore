@@ -3,6 +3,7 @@
 *.prg
 *.tmp
 *.bak
+*.dmp
 Thumbs.db
 /bak/*
 

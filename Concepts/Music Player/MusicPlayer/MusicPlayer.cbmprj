@@ -36,7 +36,6 @@
         <PostBuildCommands />
     </BuildEvents>
     <BuildList>
-        <FileName>Main.asm</FileName>
         <FileName>main.asm</FileName>
     </BuildList>
     <DetermineBuildOrder>0</DetermineBuildOrder>
@@ -50,7 +49,7 @@
             <Regions />
             <Breakpoints />
             <Bookmarks />
-            <Topmost>True</Topmost>
+            <Topmost>False</Topmost>
             <FileOpen>True</FileOpen>
         </SourceFile>
     </SourceFiles>

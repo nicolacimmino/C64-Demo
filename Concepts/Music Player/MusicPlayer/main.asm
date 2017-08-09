@@ -29,6 +29,9 @@
 ; *                                                                           *
 ; *****************************************************************************
 
+INSTRP=$02
+STEPR=$04
+
 ; *****************************************************************************
 ; * THIS IS THE ENTRY POINT INTO OUR PROGRAM. WE DO SOME SETUP AND THEN LET   *
 ; * THINGS ROLL FROM HERE.                                                    *
@@ -59,6 +62,8 @@ START   SEI             ; PREVENT INTERRUPTS WHILE WE SET THINGS UP.
         LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
         LDA  #%00000001 ; ENABLE RASTER INTERRUPT.
         STA  $D01A      ;
+        
+        JSR MUINIT
 
         LDA  $DC0D      ; ACKNOWLEDGE CIA INTERRUPTS.
         
@@ -72,6 +77,25 @@ START   SEI             ; PREVENT INTERRUPTS WHILE WE SET THINGS UP.
 ; *                                                                           *
 ; *****************************************************************************
 
+MUINIT  LDA #0          ; Start from step 0
+        STA STEPR
+        STA STEPR+1
+
+        LDA  #<INSTR    ; Instrument 0 (this will really come from the track)
+        STA  INSTRP
+        LDA  #>INSTR
+        STA  INSTRP+1
+        
+        LDA  #$D6       ; A4 in freq reg, will really come from track
+        STA $D400
+        LDA  #$1C
+        STA $D401
+
+        LDA #%00001111  ; Volume max
+        STA $D418
+        
+        RTS
+ 
 ; *****************************************************************************
 ; * THIS IS THE RASTER INTERRUPT  SERVICE ROUTINE. IN A FULL APP THIS WOULD DO* 
 ; * SEVERAL THINGS, WE HERE ONLY PROCESS THE MUSIC STUFF.                     *
@@ -80,67 +104,65 @@ ISR
         
         LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
         
-        RTI
+        LDA  #1
+        STA  $D020
+        STA  $D021
+        
+        LDY  #0         ; LOAD CURRRENT INSTRUMENT COMMAND
+        LDA  (INSTRP),Y
+
+        ROR             ; GET HIGH NIBBLE*2 IN X
+        ROR             ;
+        ROR             ;
+        AND  #%00011110 ;
+        TAX             ;
+
+        LDA CMDTBL,X    ; TRANSFER MSB OF CMD ADDRESS
+        STA @JSRINS+1
+
+        LDA CMDTBL+1,X
+        STA @JSRINS+2
+        
+@JSRINS JSR  *
+        
+MUDONE  RTI
+
 ; *                                                                           *
 ; *****************************************************************************
 
-;            PHR1  PHR2  PHR3
-;       BIT0 if set jumps back to start N time, with N being bits 6-0
+*=$F000
 
-LOOP    BYTE 0x00, 0x00, 0x00                    ; Phrase 0x0
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x10, 0x10, 0x10                   ; Phrase 0x0
+CMDTBL  WORD $0000
+        WORD $0000
+        WORD WVR
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD $0000
+        WORD END
 
-;            FRHI  FRLO  INST
+WVR     LDA  #5
+        STA  $D020
+        STA  $D021
 
-PHRASE  BYTE 0x00, 0x00, 0x00                   ; Beat 0x0
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00                   ; Beat 0xF
-                
-;            PWHI  PWLO  CR    AD    SR 
-
-INSTR   BYTE 0x00, 0x00, 0x00, 0x00, 0x00       ; Step 0x0
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00
-        BYTE 0x00, 0x00, 0x00, 0x00, 0x00       ; Step 0xF
+        RTS
 
 
+END     LDA  #8
+        STA  $D020
+        STA  $D021
 
+        RTS
+               
+INSTR   BYTE $25, $52   ; WVR 5, $52            AD
+        BYTE $26, $F3   ; SR
+        BYTE $24, $81   ; WVR 4, %10000001      NOISE + GATE ON
+        BYTE $FF        ; END
