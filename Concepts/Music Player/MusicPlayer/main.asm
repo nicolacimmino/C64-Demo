@@ -122,9 +122,16 @@ ISR
 
         LDA CMDTBL+1,X
         STA @JSRINS+2
-        
+
+        LDA  (INSTRP),Y ; PASS LOW NIBBLE OF COMMAND TO THE CALLED ROUTINE
+        AND  #%00001111
+
 @JSRINS JSR  *
         
+        CLC             ; ROUTINE RETURNS IN A THE AMOUNT OF CMD MEMORY BYTES
+        ADC INSTRP      ; CONSUMED. MOVE INSTRP
+        STA INSTRP      ; TODO needs to be a 16bit addition
+
 MUDONE  RTI
 
 ; *                                                                           *
@@ -153,6 +160,7 @@ WVR     LDA  #5
         STA  $D020
         STA  $D021
 
+        LDA  #0         ; We consumed 2 bytes
         RTS
 
 
@@ -160,6 +168,7 @@ END     LDA  #8
         STA  $D020
         STA  $D021
 
+        LDA  #0         ; We stay on the same instruction forever
         RTS
                
 INSTR   BYTE $25, $52   ; WVR 5, $52            AD
