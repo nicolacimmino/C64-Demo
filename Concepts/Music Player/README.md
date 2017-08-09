@@ -12,15 +12,26 @@ One beat is 16 TICKS.
 
 ## Instrument Table (IT) ##
 
-Each instrument is a sequence of commands, each command is made of 2 bytes. The high nibble is the command, the lower nibble the first operand,
-the second byte the second operand.
+Each instrument is a sequence of commands, each command is made of 1 byte, except some that require a full 8 bits operand. The high nibble is the command, the lower nibble the operand, where required the second byte the second operand.
 
-CMD2 CMD1 CMD0 OP4 OP3 OP2 OP1 OP0 
+| 7 | 6 | 5 | 4  | 3 | 2 | 1 | 0 |
+|---|---|---|---|---|---|---|---|
+| CMD2 | CMD1 | CMD0 | OP4  | OP3 | OP2 | OP1 | OP0 |
 
-WRITE_REG   WR \<REG> \<VAL>
+### Write Voice Register (WVR) ###
 
-  0 0 1 0 REG3-0 | VAL7-0 
-  
+| 7 | 6 | 5 | 4  | 3 | 2 | 1 | 0 | 7 | 6 | 5 | 4  | 3 | 2 | 1 | 0 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|   0    |   0   |   1  |   0  | REG3 | REG2 | REG1 | REG0 | OP7 | OP6 | OP5 | OP4 | OP3 | OP2 | OP1 | OP0 |
+
+
+### Write Register (WRR) ###
+
+| 7 | 6 | 5 | 4  | 3 | 2 | 1 | 0 | 7 | 6 | 5 | 4  | 3 | 2 | 1 | 0 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+|   0    |   0   |   1  |   1  | REG3 | REG2 | REG1 | REG0 | OP7 | OP6 | OP5 | OP4 | OP3 | OP2 | OP1 | OP0 |
+
+
 WAIT        WA 0 \<TICKS>
 
   0 1 0 TICKS4-0
