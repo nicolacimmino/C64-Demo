@@ -29,8 +29,9 @@
 ; *                                                                           *
 ; *****************************************************************************
 
-INSTRP=$02
-STEPR=$04
+INSTRP=$02 ; 2 bytes
+STEPR=$04  ; still needed?
+MUWAIT=$06 ; 2 bytes amount of ticks for the current wait
 
 ; *****************************************************************************
 ; * THIS IS THE ENTRY POINT INTO OUR PROGRAM. WE DO SOME SETUP AND THEN LET   *
@@ -86,6 +87,12 @@ MUINIT  LDA #0          ; Start from step 0
         LDA  #>INSTR
         STA  INSTRP+1
         
+        LDX  #24        ; CLEAR ALL SID REGISTERS
+        LDA  #0
+        STA  $D400,X
+        DEX
+        BNE  *-4
+
         LDA  #$D6       ; A4 in freq reg, will really come from track
         STA $D400
         LDA  #$1C
@@ -139,8 +146,8 @@ MUDONE  RTI
 
 *=$F000
 
-CMDTBL  WORD $0000
-        WORD $0000
+CMDTBL  WORD WIN
+        WORD WAI
         WORD WVR
         WORD $0000
         WORD $0000
@@ -156,22 +163,36 @@ CMDTBL  WORD $0000
         WORD $0000
         WORD END
 
-WVR     LDA  #5
-        STA  $D020
-        STA  $D021
+WIN     LDY  #1
+        LDA  (INSTRP),Y        
+        STA MUWAIT
+        LDA #2
+        RTS
 
-        LDA  #0         ; We consumed 2 bytes
+WAI     LDA #0
+        DEC MUWAIT
+        BNE @DONE
+        LDA #1
+@DONE   RTS
+
+WVR     TAX
+        LDY  #1
+        LDA  (INSTRP),Y
+        STA  $D400,X
+
+        LDA  #2         ; We consumed 2 bytes
         RTS
 
 
-END     LDA  #8
-        STA  $D020
-        STA  $D021
-
-        LDA  #0         ; We stay on the same instruction forever
+END     LDA  #0         ; We stay on the same instruction forever
         RTS
                
-INSTR   BYTE $25, $52   ; WVR 5, $52            AD
-        BYTE $26, $F3   ; SR
-        BYTE $24, $81   ; WVR 4, %10000001      NOISE + GATE ON
+INSTR   BYTE $25, $11   ; WVR 5, $52            AD
+        BYTE $26, $F1   ; SR
+        BYTE $24, $11   ; WVR 4, %10000001      NOISE + GATE ON
+        BYTE $00, $01
+        BYTE $10
+        BYTE $24, $00   ;
+
         BYTE $FF        ; END
+
