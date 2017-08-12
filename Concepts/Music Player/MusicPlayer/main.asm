@@ -31,7 +31,9 @@
 
 INSTRP=$02 ; 2 bytes
 STEPR=$04  ; still needed?
-MUWAIT=$06 ; 2 bytes amount of ticks for the current wait
+MUWAIT=$06 ; 2 bytes?? amount of ticks for the current wait
+TICK=$08   ; 2 bytes current TICK
+PHRP=$0A   ; 2 bytes pointer into the current PHRASE (abosulte address)
 
 ; *****************************************************************************
 ; * THIS IS THE ENTRY POINT INTO OUR PROGRAM. WE DO SOME SETUP AND THEN LET   *
@@ -81,22 +83,22 @@ START   SEI             ; PREVENT INTERRUPTS WHILE WE SET THINGS UP.
 MUINIT  LDA #0          ; Start from step 0
         STA STEPR
         STA STEPR+1
-
-        LDA  #<INSTR    ; Instrument 0 (this will really come from the track)
-        STA  INSTRP
-        LDA  #>INSTR
-        STA  INSTRP+1
         
+        LDA #<PHRASE
+        STA PHRP        ; Phrase pointer, will come from loop
+        LDA #>PHRASE
+        STA PHRP+1
+
+;        LDA  #<INSTR    ; Instrument 0 (this will really come from the track)
+;        STA  INSTRP
+;        LDA  #>INSTR
+;        STA  INSTRP+1
+;        
         LDX  #24        ; CLEAR ALL SID REGISTERS
         LDA  #0
         STA  $D400,X
         DEX
         BNE  *-4
-
-        LDA  #$D6       ; A4 in freq reg, will really come from track
-        STA $D400
-        LDA  #$1C
-        STA $D401
 
         LDA #%00001111  ; Volume max
         STA $D418
@@ -107,15 +109,39 @@ MUINIT  LDA #0          ; Start from step 0
 ; * THIS IS THE RASTER INTERRUPT  SERVICE ROUTINE. IN A FULL APP THIS WOULD DO* 
 ; * SEVERAL THINGS, WE HERE ONLY PROCESS THE MUSIC STUFF.                     *
 
-ISR     
+ISR     INC TICK        ; NEXT TICK (16 BIT INCREMENT)
+        BNE *+4
+        INC TICK+1
+
+        LDY #0          ; PHRP IS POINTING TO THE CURRENT PHRASE ENTRY AND
+        LDA TICK        ; THE FIRST TWO BYTES ARE THE TICK OF THE NEXT EVENT
+        CMP (PHRP),Y    ; KEEP PLAYING THE CURRENT INSTRUMENT IF WE HAVE NOT
+        BNE @PLAY       ; REACHED THE TICK YET
+        INY 
+        LDA TICK+1
+        CMP (PHRP),Y
+        BNE @PLAY
+
+        LDY #2          ; Freq LO from track
+        LDA (PHRP),Y
+        STA $D400
+        LDY #3          ; Freq HI from track
+        LDA (PHRP),Y
+        STA $D401
         
-        LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
-        
-        LDA  #1
-        STA  $D020
-        STA  $D021
-        
-        LDY  #0         ; LOAD CURRRENT INSTRUMENT COMMAND
+        LDA  #<INSTR    ; Instrument 0 (this will really come from the phrase)
+        STA  INSTRP
+        LDA  #>INSTR
+        STA  INSTRP+1
+       
+        CLC
+        LDA #6          ; On to next entry in the phrase
+        ADC PHRP
+        STA PHRP
+        BNE @PLAY
+        INC PHRP+1
+
+@PLAY   LDY  #0         ; LOAD CURRRENT INSTRUMENT COMMAND
         LDA  (INSTRP),Y
 
         ROR             ; GET HIGH NIBBLE*2 IN X
@@ -139,7 +165,9 @@ ISR
         ADC INSTRP      ; CONSUMED. MOVE INSTRP
         STA INSTRP      ; TODO needs to be a 16bit addition
 
-MUDONE  RTI
+MUDONE  LSR  $D019      ; ACKNOWELEDGE VIDEO INTERRUPTS.
+
+        RTI
 
 ; *                                                                           *
 ; *****************************************************************************
@@ -195,4 +223,10 @@ INSTR   BYTE $25, $11   ; WVR 5, $52            AD
         BYTE $24, $00   ;
 
         BYTE $FF        ; END
+
+        ; ticklo tickhi  FRELO FREHI INSTR, DUR
+PHRASE  BYTE $01, $00, $D6, $1C, $00, $05
+        BYTE $41, $00, $D6, $2C, $00, $05
+        BYTE $81, $00, $D6, $1C, $00, $05
+        BYTE $F1, $00, $D6, $2C, $00, $05
 
